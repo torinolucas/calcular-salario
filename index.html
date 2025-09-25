@@ -20,16 +20,60 @@
             <input type="number" id="bonificacao" placeholder="Ex: 2500">
         </div>
         <div class="input-item">
-            <label for="he75">Horas Extras 75%</label>
+            <label for="he75">
+                Horas Extras 75%
+                <span class="tooltip">
+                    <span class="info-icon">i</span>
+                    <span class="tooltiptext">
+                        <strong>Hora Extra 75%</strong><br>
+                        Dia de semana, durante o dia.<br>
+                        Vale o valor da sua hora normal + 75% de acréscimo.
+                    </span>
+                </span>
+            </label>
             <input type="number" id="he75" placeholder="Ex: 6.5">
         </div>
         <div class="input-item">
-            <label for="he100">Horas Extras 100%</label>
+            <label for="he100">
+                Horas Extras 100%
+                <span class="tooltip">
+                    <span class="info-icon">i</span>
+                    <span class="tooltiptext">
+                        <strong>Hora Extra 100%</strong><br>
+                        Final de semana ou feriado, durante o dia.<br>
+                        Vale o valor da sua hora normal + 100% de acréscimo.
+                    </span>
+                </span>
+            </label>
             <input type="number" id="he100" placeholder="Ex: 2.5">
         </div>
         <div class="input-item">
-            <label for="heNoturna75">H.E. Noturnas 75%</label>
+            <label for="heNoturna75">
+                H.E. Noturnas 75%
+                <span class="tooltip">
+                    <span class="info-icon">i</span>
+                    <span class="tooltiptext">
+                        <strong>Hora Extra Noturna 75%</strong><br>
+                        Dia de semana, durante a noite (22h às 5h).<br>
+                        Acréscimo de 75% (hora extra) + 30% (adicional noturno)
+                    </span>
+                </span>
+            </label>
             <input type="number" id="heNoturna75" placeholder="Ex: 0.5">
+        </div>
+        <div class="input-item">
+            <label for="heNoturna100">
+                H.E. Noturnas 100%
+                <span class="tooltip">
+                    <span class="info-icon">i</span>
+                    <span class="tooltiptext">
+                        <strong>Hora Extra Noturna 100%</strong><br>
+                        Final de semana ou feriado, durante a noite (22h às 5h).<br>
+                        Acréscimo de 100% (hora extra) + 20% (adicional noturno).
+                    </span>
+                </span>
+            </label>
+            <input type="number" id="heNoturna100" placeholder="Ex: 1.0">
         </div>
         <div class="input-item">
             <label for="sobreaviso">Horas Sobreaviso</label>
@@ -51,7 +95,8 @@
         <div class="detail-line"><span>Valor da Hora:</span><div class="value-block"><span id="resValorHora"></span><br><span class="formula" id="formulaValorHora"></span></div></div>
         <div class="detail-line"><span>(+) Total H.E. 75%:</span><div class="value-block"><span id="resHE75"></span><br><span class="formula" id="formulaHE75"></span></div></div>
         <div class="detail-line"><span>(+) Total H.E. 100%:</span><div class="value-block"><span id="resHE100"></span><br><span class="formula" id="formulaHE100"></span></div></div>
-        <div class="detail-line"><span>(+) Total H.E. Noturnas:</span><div class="value-block"><span id="resHENoturna"></span><br><span class="formula" id="formulaHENoturna"></span></div></div>
+        <div class="detail-line"><span>(+) Total H.E. Noturnas 75%:</span><div class="value-block"><span id="resHENoturna"></span><br><span class="formula" id="formulaHENoturna"></span></div></div>
+        <div class="detail-line"><span>(+) Total H.E. Noturnas 100%:</span><div class="value-block"><span id="resHENoturna100"></span><br><span class="formula" id="formulaHENoturna100"></span></div></div>
         <div class="detail-line"><span>(+) Total Sobreaviso:</span><div class="value-block"><span id="resSobreaviso"></span><br><span class="formula" id="formulaSobreaviso"></span></div></div>
         <div class="detail-line"><span>(+) DSR (Exato):</span><div class="value-block"><span id="resDSR"></span><br><span class="formula" id="formulaDSR"></span></div></div>
         

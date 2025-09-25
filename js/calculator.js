@@ -34,6 +34,7 @@ function obterDadosEntrada() {
         he75: parseFloat(document.getElementById('he75').value) || 0,
         he100: parseFloat(document.getElementById('he100').value) || 0,
         heNoturna75: parseFloat(document.getElementById('heNoturna75').value) || 0,
+        heNoturna100: parseFloat(document.getElementById('heNoturna100').value) || 0,
         sobreaviso: parseFloat(document.getElementById('sobreaviso').value) || 0,
         diasUteis: parseFloat(document.getElementById('diasUteis').value) || 22,
         diasDescanso: parseFloat(document.getElementById('diasDescanso').value) || 5
@@ -56,11 +57,14 @@ function calcularVencimentos(dados) {
     // Cálculo das horas extras noturnas (75% + adicional noturno 30%)
     const totalHENoturna75 = dados.heNoturna75 * ((valorHora * 1.75) + (valorHora * 0.30));
     
+    // Cálculo das horas extras noturnas (100% + adicional noturno 30%)
+    const totalHENoturna100 = dados.heNoturna100 * ((valorHora * 2.00) + (valorHora * 0.30));
+    
     // Cálculo do sobreaviso (valor da hora dividido por 3)
     const totalSobreaviso = dados.sobreaviso * (valorHora / 3);
     
     // Total de valores variáveis
-    const totalVariaveis = totalHE75 + totalHE100 + totalHENoturna75 + totalSobreaviso;
+    const totalVariaveis = totalHE75 + totalHE100 + totalHENoturna75 + totalHENoturna100 + totalSobreaviso;
     
     // Cálculo do DSR (Descanso Semanal Remunerado)
     const dsr = dados.diasUteis > 0 ? (totalVariaveis / dados.diasUteis) * dados.diasDescanso : 0;
@@ -73,6 +77,7 @@ function calcularVencimentos(dados) {
         totalHE75,
         totalHE100,
         totalHENoturna75,
+        totalHENoturna100,
         totalSobreaviso,
         totalVariaveis,
         dsr,
@@ -148,6 +153,9 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
 
     document.getElementById('resHENoturna').innerText = `R$ ${calculos.totalHENoturna75.toFixed(2)}`;
     document.getElementById('formulaHENoturna').innerText = `${dados.heNoturna75}h × (H.E. 75% + Adic. Noturno 30%)`;
+
+    document.getElementById('resHENoturna100').innerText = `R$ ${calculos.totalHENoturna100.toFixed(2)}`;
+    document.getElementById('formulaHENoturna100').innerText = `${dados.heNoturna100}h × (H.E. 100% + Adic. Noturno 30%)`;
 
     document.getElementById('resSobreaviso').innerText = `R$ ${calculos.totalSobreaviso.toFixed(2)}`;
     document.getElementById('formulaSobreaviso').innerText = `${dados.sobreaviso}h × (R$ ${calculos.valorHora.toFixed(3)} / 3)`;
