@@ -4,37 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Salário</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px 0; }
-        .container { background-color: #fff; padding: 25px 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; box-sizing: border-box; }
-        h1 { text-align: center; color: #444; }
-        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 20px; margin-bottom: 20px; }
-        .input-item { display: flex; flex-direction: column; }
-        label { margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        input { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
-        button { width: 100%; padding: 15px; font-size: 18px; font-weight: bold; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
-        button:hover { background-color: #0056b3; }
-        .results { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-        .result-line, .detail-line { display: flex; justify-content: space-between; align-items: center; font-size: 16px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
-        .detail-line { color: #555; }
-        .result-line span:first-child, .detail-line span:first-child { font-weight: bold; }
-        .value-block { text-align: right; }
-        .formula { font-size: 12px; color: #888; }
-        .result-final { font-size: 24px; font-weight: bold; color: #28a745; border-top: 2px solid #28a745; margin-top: 10px; padding-top: 10px; }
-        .section-title { font-weight: bold; font-size: 18px; color: #007bff; margin-top: 20px; border-bottom: 2px solid #007bff; padding-bottom: 5px;}
-
-        /* --- AJUSTES PARA MOBILE --- */
-        @media (max-width: 600px) {
-            body { padding: 0; }
-            .container { padding: 20px 25px; border-radius: 0; min-height: 100vh; }
-            h1 { font-size: 24px; }
-            .input-grid { grid-template-columns: 1fr; } /* Muda para 1 coluna */
-            .detail-line { flex-direction: column; align-items: flex-start; }
-            .value-block { text-align: right; width: 100%; margin-top: 5px;} /* <<-- MUDANÇA AQUI */
-            .result-line span:last-child { align-self: flex-end; font-size: 18px; }
-            .result-final span:last-child { font-size: 26px; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -93,79 +63,6 @@
     </div>
 </div>
 
-<script>
-function calcularSalario() {
-    // 1. Obter valores dos inputs
-    const salarioBase = parseFloat(document.getElementById('salarioBase').value) || 0;
-    const bonificacao = parseFloat(document.getElementById('bonificacao').value) || 0;
-    const he75 = parseFloat(document.getElementById('he75').value) || 0;
-    const he100 = parseFloat(document.getElementById('he100').value) || 0;
-    const heNoturna75 = parseFloat(document.getElementById('heNoturna75').value) || 0;
-    const sobreaviso = parseFloat(document.getElementById('sobreaviso').value) || 0;
-    const diasUteis = parseFloat(document.getElementById('diasUteis').value) || 22;
-    const diasDescanso = parseFloat(document.getElementById('diasDescanso').value) || 5;
-
-    // APLICA A SUA REGRA DE CÁLCULO: (Base + Bônus) / 200
-    const valorHora = (salarioBase + bonificacao) / 200;
-
-    // 2. Calcular Vencimentos
-    const totalHE75 = he75 * (valorHora * 1.75);
-    const totalHE100 = he100 * (valorHora * 2.00);
-    const totalHENoturna75 = heNoturna75 * ((valorHora * 1.75) + (valorHora * 0.30));
-    const totalSobreaviso = sobreaviso * (valorHora / 3);
-    const totalVariaveis = totalHE75 + totalHE100 + totalHENoturna75 + totalSobreaviso;
-    const dsr = diasUteis > 0 ? (totalVariaveis / diasUteis) * diasDescanso : 0;
-    const salarioBruto = salarioBase + bonificacao + totalVariaveis + dsr;
-
-    // 3. Calcular Descontos (INSS e IRRF)
-    let descontoINSS = 0;
-    if (salarioBruto <= 1412.00) { descontoINSS = salarioBruto * 0.075; }
-    else if (salarioBruto <= 2666.68) { descontoINSS = (1412 * 0.075) + ((salarioBruto - 1412) * 0.09); }
-    else if (salarioBruto <= 4000.03) { descontoINSS = (1412 * 0.075) + ((2666.68 - 1412) * 0.09) + ((salarioBruto - 2666.68) * 0.12); }
-    else if (salarioBruto <= 7786.02) { descontoINSS = (1412 * 0.075) + ((2666.68 - 1412) * 0.09) + ((4000.03 - 2666.68) * 0.12) + ((salarioBruto - 4000.03) * 0.14); }
-    else { descontoINSS = 908.85; }
-
-    const baseIRRF = salarioBruto - descontoINSS;
-    let descontoIRRF = 0;
-    if (baseIRRF <= 2259.20) { descontoIRRF = 0; }
-    else if (baseIRRF <= 2826.65) { descontoIRRF = (baseIRRF * 0.075) - 169.44; }
-    else if (baseIRRF <= 3751.05) { descontoIRRF = (baseIRRF * 0.15) - 381.44; }
-    else if (baseIRRF <= 4664.68) { descontoIRRF = (baseIRRF * 0.225) - 662.77; }
-    else { descontoIRRF = (baseIRRF * 0.275) - 896.00; }
-    if(descontoIRRF < 0) descontoIRRF = 0;
-
-    // 4. Calcular Líquido
-    const salarioLiquido = salarioBruto - descontoINSS - descontoIRRF;
-
-    // 5. Exibir TODOS os resultados e FÓRMULAS
-    // Detalhes
-    document.getElementById('resValorHora').innerText = 'R$ ' + valorHora.toFixed(3);
-    document.getElementById('formulaValorHora').innerText = `(${salarioBase} + ${bonificacao}) / 200`;
-    
-    document.getElementById('resHE75').innerText = 'R$ ' + totalHE75.toFixed(2);
-    document.getElementById('formulaHE75').innerText = `${he75}h * (R$ ${valorHora.toFixed(3)} * 1.75)`;
-    
-    document.getElementById('resHE100').innerText = 'R$ ' + totalHE100.toFixed(2);
-    document.getElementById('formulaHE100').innerText = `${he100}h * (R$ ${valorHora.toFixed(3)} * 2.00)`;
-
-    document.getElementById('resHENoturna').innerText = 'R$ ' + totalHENoturna75.toFixed(2);
-    document.getElementById('formulaHENoturna').innerText = `${heNoturna75}h * (H.E. 75% + Adic. Noturno 30%)`;
-
-    document.getElementById('resSobreaviso').innerText = 'R$ ' + totalSobreaviso.toFixed(2);
-    document.getElementById('formulaSobreaviso').innerText = `${sobreaviso}h * (R$ ${valorHora.toFixed(3)} / 3)`;
-
-    document.getElementById('resDSR').innerText = 'R$ ' + dsr.toFixed(2);
-    document.getElementById('formulaDSR').innerText = `(Soma Variáveis / ${diasUteis}) * ${diasDescanso}`;
-
-    // Resumo
-    document.getElementById('resBruto').innerText = 'R$ ' + salarioBruto.toFixed(2);
-    document.getElementById('resINSS').innerText = 'R$ ' + descontoINSS.toFixed(2);
-    document.getElementById('resIRRF').innerText = 'R$ ' + descontoIRRF.toFixed(2);
-    document.getElementById('resLiquido').innerText = 'R$ ' + salarioLiquido.toFixed(2);
-    
-    document.getElementById('resultados').style.display = 'block';
-}
-</script>
-
+<script src="js/calculator.js"></script>
 </body>
 </html>
