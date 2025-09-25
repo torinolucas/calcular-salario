@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Salário de Alta Precisão</title>
+    <title>Calculadora de Salário</title>
     <style>
-        body { font-family: sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px 0; }
-        .container { background-color: #fff; padding: 25px 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f4f4f9; color: #333; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px 0; }
+        .container { background-color: #fff; padding: 25px 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; box-sizing: border-box; }
         h1 { text-align: center; color: #444; }
         .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 20px; margin-bottom: 20px; }
         .input-item { display: flex; flex-direction: column; }
@@ -22,12 +22,25 @@
         .formula { font-size: 12px; color: #888; }
         .result-final { font-size: 24px; font-weight: bold; color: #28a745; border-top: 2px solid #28a745; margin-top: 10px; padding-top: 10px; }
         .section-title { font-weight: bold; font-size: 18px; color: #007bff; margin-top: 20px; border-bottom: 2px solid #007bff; padding-bottom: 5px;}
+
+        /* --- AJUSTES PARA MOBILE --- */
+        @media (max-width: 600px) {
+            body { padding: 0; }
+            .container { padding: 20px 25px; border-radius: 0; min-height: 100vh; }
+            h1 { font-size: 24px; }
+            .input-grid { grid-template-columns: 1fr; } /* Muda para 1 coluna */
+            .result-line, .detail-line { flex-direction: column; align-items: flex-start; }
+            .value-block { text-align: left; width: 100%;}
+            .formula { text-align: left; }
+            .result-line span:last-child { align-self: flex-end; font-size: 18px; }
+            .result-final span:last-child { font-size: 26px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Calculadora de Alta Precisão</h1>
+    <h1>Calculadora de Salário</h1>
     <div class="input-grid">
         <div class="input-item">
             <label for="salarioBase">Salário Base (R$)</label>
@@ -90,7 +103,6 @@ function calcularSalario() {
     const he100 = parseFloat(document.getElementById('he100').value) || 0;
     const heNoturna75 = parseFloat(document.getElementById('heNoturna75').value) || 0;
     const sobreaviso = parseFloat(document.getElementById('sobreaviso').value) || 0;
-    // NOVOS INPUTS PARA O DSR
     const diasUteis = parseFloat(document.getElementById('diasUteis').value) || 22;
     const diasDescanso = parseFloat(document.getElementById('diasDescanso').value) || 5;
 
@@ -103,13 +115,10 @@ function calcularSalario() {
     const totalHENoturna75 = heNoturna75 * ((valorHora * 1.75) + (valorHora * 0.30));
     const totalSobreaviso = sobreaviso * (valorHora / 3);
     const totalVariaveis = totalHE75 + totalHE100 + totalHENoturna75 + totalSobreaviso;
-    
-    // CÁLCULO PRECISO DO DSR
     const dsr = diasUteis > 0 ? (totalVariaveis / diasUteis) * diasDescanso : 0;
-    
     const salarioBruto = salarioBase + bonificacao + totalVariaveis + dsr;
 
-    // 3. Calcular Descontos (INSS e IRRF) - Lógica inalterada
+    // 3. Calcular Descontos (INSS e IRRF)
     let descontoINSS = 0;
     if (salarioBruto <= 1412.00) { descontoINSS = salarioBruto * 0.075; }
     else if (salarioBruto <= 2666.68) { descontoINSS = (1412 * 0.075) + ((salarioBruto - 1412) * 0.09); }
