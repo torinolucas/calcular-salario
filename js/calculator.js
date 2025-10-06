@@ -166,7 +166,7 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     document.getElementById('formulaSobreaviso').innerText = `${dados.sobreaviso}h × (R$ ${calculos.valorHora.toFixed(3)} / 3)`;
 
     document.getElementById('resDSR').innerText = `R$ ${calculos.dsr.toFixed(2)}`;
-    document.getElementById('formulaDSR').innerText = `(H.E.75% + H.E.100% + H.E.Noturna75% + H.E.Noturna100% + Sobreaviso = R$ ${calculos.totalVariaveis.toFixed(2)}) / ${dados.diasUteis} dias úteis × ${dados.diasDescanso} dias descanso`;
+    document.getElementById('formulaDSR').innerText = `(Todas as H.E. + Sobreaviso = R$ ${calculos.totalVariaveis.toFixed(2)}) / ${dados.diasUteis} dias úteis × ${dados.diasDescanso} dias descanso`;
 
     // ===== EXIBIR RESUMO FINANCEIRO =====
     document.getElementById('resBruto').innerText = `R$ ${calculos.salarioBruto.toFixed(2)}`;
