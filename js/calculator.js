@@ -94,34 +94,39 @@ function calcularDescontos(salarioBruto) {
     // ===== CÁLCULO DO INSS =====
     let descontoINSS = 0;
     
-    // Faixas progressivas do INSS (2024/2025)
-    if (salarioBruto <= 1412.00) {
-        descontoINSS = salarioBruto * 0.075; // 7,5%
-    } else if (salarioBruto <= 2666.68) {
-        descontoINSS = (1412 * 0.075) + ((salarioBruto - 1412) * 0.09); // 9%
-    } else if (salarioBruto <= 4000.03) {
-        descontoINSS = (1412 * 0.075) + ((2666.68 - 1412) * 0.09) + ((salarioBruto - 2666.68) * 0.12); // 12%
-    } else if (salarioBruto <= 7786.02) {
-        descontoINSS = (1412 * 0.075) + ((2666.68 - 1412) * 0.09) + ((4000.03 - 2666.68) * 0.12) + ((salarioBruto - 4000.03) * 0.14); // 14%
+    // Tabela INSS 2025 (com dedução): alíquotas e faixas de contribuição
+   if (salarioBruto <= 1518.00) {
+        // 1ª Faixa
+        descontoINSS = salarioBruto * 0.075;
+    } else if (salarioBruto <= 2793.88) {
+        // 2ª Faixa
+        descontoINSS = (salarioBruto * 0.09) - 22.77;
+    } else if (salarioBruto <= 4190.84) {
+        // 3ª Faixa
+        descontoINSS = (salarioBruto * 0.12) - 106.59;
+    } else if (salarioBruto <= 8150.50) {
+        // 4ª Faixa (até o teto)
+        descontoINSS = (salarioBruto * 0.14) - 190.41;
     } else {
-        descontoINSS = 908.85; // Teto máximo do INSS
+        // Acima do teto, o desconto é fixo
+        descontoINSS = 950.66; // Valor do desconto sobre o teto: (8150.50 * 0.14) - 190.41
     }
     
     // ===== CÁLCULO DO IRRF =====
     const baseIRRF = salarioBruto - descontoINSS;
     let descontoIRRF = 0;
     
-    // Faixas progressivas do IRRF (2024/2025)
-    if (baseIRRF <= 2259.20) {
+    // Faixas progressivas do IRRF (maio 2025)
+    if (baseIRRF <= 2428.80) {
         descontoIRRF = 0; // Isento
     } else if (baseIRRF <= 2826.65) {
-        descontoIRRF = (baseIRRF * 0.075) - 169.44; // 7,5%
+        descontoIRRF = (baseIRRF * 0.075) - 182.16; // 7,5%
     } else if (baseIRRF <= 3751.05) {
-        descontoIRRF = (baseIRRF * 0.15) - 381.44; // 15%
+        descontoIRRF = (baseIRRF * 0.15) - 394,16; // 15%
     } else if (baseIRRF <= 4664.68) {
-        descontoIRRF = (baseIRRF * 0.225) - 662.77; // 22,5%
+        descontoIRRF = (baseIRRF * 0.225) - 675,49; // 22,5%
     } else {
-        descontoIRRF = (baseIRRF * 0.275) - 896.00; // 27,5%
+        descontoIRRF = (baseIRRF * 0.275) - 908,73; // 27,5%
     }
     
     // Garantir que o IRRF não seja negativo
