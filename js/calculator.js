@@ -88,45 +88,59 @@ function calcularVencimentos(dados) {
 /**
  * Calcula os descontos de INSS e IRRF
  * @param {number} salarioBruto - Valor do salário bruto
- * @returns {Object} Objeto com os valores dos descontos
+ * @returns {Object} Objeto com os valores dos descontos e fórmulas explicativas
  */
 function calcularDescontos(salarioBruto) {
     // ===== CÁLCULO DO INSS =====
     let descontoINSS = 0;
+    let formulaINSSTexto = '';
     
     // Tabela INSS 2025 (com dedução): alíquotas e faixas de contribuição
-   if (salarioBruto <= 1518.00) {
+    if (salarioBruto <= 1518.00) {
         // 1ª Faixa
         descontoINSS = salarioBruto * 0.075;
+        formulaINSSTexto = `${salarioBruto.toFixed(2)} × 7,5% = ${descontoINSS.toFixed(2)}`;
     } else if (salarioBruto <= 2793.88) {
         // 2ª Faixa
         descontoINSS = (salarioBruto * 0.09) - 22.77;
+        formulaINSSTexto = `(${salarioBruto.toFixed(2)} × 9%) - 22,77 = ${descontoINSS.toFixed(2)}`;
     } else if (salarioBruto <= 4190.84) {
         // 3ª Faixa
         descontoINSS = (salarioBruto * 0.12) - 106.59;
+        formulaINSSTexto = `(${salarioBruto.toFixed(2)} × 12%) - 106,59 = ${descontoINSS.toFixed(2)}`;
     } else if (salarioBruto <= 8150.50) {
         // 4ª Faixa (até o teto)
         descontoINSS = (salarioBruto * 0.14) - 190.41;
+        formulaINSSTexto = `(${salarioBruto.toFixed(2)} × 14%) - 190,41 = ${descontoINSS.toFixed(2)}`;
     } else {
         // Acima do teto, o desconto é fixo
         descontoINSS = 950.66; // Valor do desconto sobre o teto: (8150.50 * 0.14) - 190.41
+        formulaINSSTexto = `Teto máximo INSS: R$ 950,66 (salário acima de R$ 8.150,50)`;
     }
     
     // ===== CÁLCULO DO IRRF =====
-    const baseIRRF = salarioBruto - descontoINSS;
+    // A partir de maio de 2025, houve atualização: a primeira faixa passou a R$ 2.428,80, e o desconto simplificado foi ampliado para R$ 607,20. Na prática, isso garantiu a isenção de quem recebe até R$ 3.036,00, o equivalente a dois salários mínimos.
+    const baseIRRF = Math.min(salarioBruto - descontoINSS, salarioBruto - 607.20);
+    
     let descontoIRRF = 0;
+    let formulaIRRFTexto = '';
     
     // Faixas progressivas do IRRF (maio 2025)
     if (baseIRRF <= 2428.80) {
         descontoIRRF = 0; // Isento
+        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} - Isento de IRRF`;
     } else if (baseIRRF <= 2826.65) {
         descontoIRRF = (baseIRRF * 0.075) - 182.16; // 7,5%
+        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 7,5% - 182,16 = ${descontoIRRF.toFixed(2)}`;
     } else if (baseIRRF <= 3751.05) {
-        descontoIRRF = (baseIRRF * 0.15) - 394,16; // 15%
+        descontoIRRF = (baseIRRF * 0.15) - 394.16; // 15%
+        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 15% - 394,16 = ${descontoIRRF.toFixed(2)}`;
     } else if (baseIRRF <= 4664.68) {
-        descontoIRRF = (baseIRRF * 0.225) - 675,49; // 22,5%
+        descontoIRRF = (baseIRRF * 0.225) - 675.49; // 22,5%
+        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 22,5% - 675,49 = ${descontoIRRF.toFixed(2)}`;
     } else {
-        descontoIRRF = (baseIRRF * 0.275) - 908,73; // 27,5%
+        descontoIRRF = (baseIRRF * 0.275) - 908.73; // 27,5%
+        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 27,5% - 908,73 = ${descontoIRRF.toFixed(2)}`;
     }
     
     // Garantir que o IRRF não seja negativo
@@ -134,7 +148,9 @@ function calcularDescontos(salarioBruto) {
     
     return {
         inss: descontoINSS,
-        irrf: descontoIRRF
+        irrf: descontoIRRF,
+        formulaINSS: formulaINSSTexto,
+        formulaIRRF: formulaIRRFTexto
     };
 }
 
@@ -173,6 +189,10 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     document.getElementById('resINSS').innerText = `R$ ${descontos.inss.toFixed(2)}`;
     document.getElementById('resIRRF').innerText = `R$ ${descontos.irrf.toFixed(2)}`;
     document.getElementById('resLiquido').innerText = `R$ ${salarioLiquido.toFixed(2)}`;
+    
+    // Usar as fórmulas calculadas na função calcularDescontos
+    document.getElementById('formulaINSS').innerText = descontos.formulaINSS;
+    document.getElementById('formulaIRRF').innerText = descontos.formulaIRRF;
     
     // ===== MOSTRAR A SEÇÃO DE RESULTADOS =====
     document.getElementById('resultados').style.display = 'block';
