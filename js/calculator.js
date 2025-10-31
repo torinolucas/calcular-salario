@@ -164,25 +164,26 @@ function calcularDescontos(salarioBruto) {
 function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     // ===== EXIBIR DETALHES DOS GANHOS =====
     document.getElementById('resValorHora').innerText = `R$ ${calculos.valorHora.toFixed(3)}`;
-    document.getElementById('formulaValorHora').innerText = `(${dados.salarioBase} + ${dados.bonificacao}) / 200`;
+    document.getElementById('formulaValorHora').innerHTML =
+        `(<strong>${formatarMoeda(dados.salarioBase)} + ${formatarMoeda(dados.bonificacao)}</strong>) / 200`;
     
     document.getElementById('resHE75').innerText = `R$ ${calculos.totalHE75.toFixed(2)}`;
-    document.getElementById('formulaHE75').innerText = `${dados.he75}h × (R$ ${calculos.valorHora.toFixed(3)} × 1.75)`;
+    document.getElementById('formulaHE75').innerHTML = `<strong>${dados.he75}h</strong> × (R$ ${calculos.valorHora.toFixed(3)} × 1.75)`;
     
     document.getElementById('resHE100').innerText = `R$ ${calculos.totalHE100.toFixed(2)}`;
-    document.getElementById('formulaHE100').innerText = `${dados.he100}h × (R$ ${calculos.valorHora.toFixed(3)} × 2.00)`;
+    document.getElementById('formulaHE100').innerHTML = `<strong>${dados.he100}h</strong> × (R$ ${calculos.valorHora.toFixed(3)} × 2.00)`;
 
     document.getElementById('resHENoturna').innerText = `R$ ${calculos.totalHENoturna75.toFixed(2)}`;
-    document.getElementById('formulaHENoturna').innerText = `${dados.heNoturna75}h × (H.E. 75% + Adic. Noturno 30%)`;
+    document.getElementById('formulaHENoturna').innerHTML = `<strong>${dados.heNoturna75}h</strong> × (H.E. 75% + Adic. Noturno 30%)`;
 
     document.getElementById('resHENoturna100').innerText = `R$ ${calculos.totalHENoturna100.toFixed(2)}`;
-    document.getElementById('formulaHENoturna100').innerText = `${dados.heNoturna100}h × (H.E. 100% + Adic. Noturno 30%)`;
+    document.getElementById('formulaHENoturna100').innerHTML = `<strong>${dados.heNoturna100}h</strong> × (H.E. 100% + Adic. Noturno 30%)`;
 
     document.getElementById('resSobreaviso').innerText = `R$ ${calculos.totalSobreaviso.toFixed(2)}`;
-    document.getElementById('formulaSobreaviso').innerText = `${dados.sobreaviso}h × (R$ ${calculos.valorHora.toFixed(3)} / 3)`;
+    document.getElementById('formulaSobreaviso').innerHTML = `<strong>${dados.sobreaviso}h</strong> × (R$ ${calculos.valorHora.toFixed(3)} / 3)`;
 
     document.getElementById('resDSR').innerText = `R$ ${calculos.dsr.toFixed(2)}`;
-    document.getElementById('formulaDSR').innerText = `(Todas as H.E. + Sobreaviso = R$ ${calculos.totalVariaveis.toFixed(2)}) / ${dados.diasUteis} dias úteis × ${dados.diasDescanso} dias descanso`;
+    document.getElementById('formulaDSR').innerHTML = `(Todas as H.E. + Sobreaviso = R$ ${calculos.totalVariaveis.toFixed(2)}) / <strong>${dados.diasUteis}</strong> dias úteis × <strong>${dados.diasDescanso}</strong> dias descanso`;
 
     // ===== EXIBIR RESUMO FINANCEIRO =====
     document.getElementById('resBruto').innerText = `R$ ${calculos.salarioBruto.toFixed(2)}`;
