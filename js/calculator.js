@@ -211,10 +211,20 @@ function formatarMoeda(valor) {
     }).format(valor);
 }
 
-/**
- * Inicialização quando a página carrega
- */
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Adicionar listeners para validação em tempo real, se necessário
+    const mesAtual = new Date().getMonth() + 1;
+    const anoAtual = new Date().getFullYear();
+
+    if (window.calcHolidays && typeof window.calcHolidays.calcularDiasUteisMes === 'function') {
+        const res = window.calcHolidays.calcularDiasUteisMes(mesAtual, anoAtual);
+        const diasUteisInput = document.getElementById('diasUteis');
+        const diasDescansoInput = document.getElementById('diasDescanso');
+        if (diasUteisInput) diasUteisInput.value = res.diasUteis;
+        if (diasDescansoInput) diasDescansoInput.value = res.domingos;
+    } else {
+        console.warn('calc-holiday-sunday.js não carregado: dias úteis não preenchidos automaticamente.');
+    }
+
     console.log('Calculadora de Salário carregada com sucesso!');
 });
