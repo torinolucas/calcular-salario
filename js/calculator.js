@@ -228,3 +228,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('Calculadora de Salário carregada com sucesso!');
 });
+
+// ...existing code...
+(function prefillFromUrl(){
+    const map = {
+        salarioBase: 'salarioBase',
+        bonificacao: 'bonificacao', // select
+        he75: 'he75',
+        he100: 'he100',
+        heNoturna75: 'heNoturna75',
+        heNoturna100: 'heNoturna100',
+        sobreaviso: 'sobreaviso'
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    let filled = false;
+
+    for (const [param, id] of Object.entries(map)) {
+        if (!params.has(param)) continue;
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.value = params.get(param);
+        filled = true;
+    }
+
+    // Se quiser executar o cálculo automaticamente, adicione &run=1 na URL
+    if (filled && params.get('run') === '1' && typeof calcularSalario === 'function') {
+        setTimeout(() => calcularSalario(), 50);
+    }
+})();
+// ...existing code...
