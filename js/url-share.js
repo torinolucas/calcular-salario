@@ -32,18 +32,20 @@
 
         const qs = params.toString();
 
-        // Construir uma URL RELATIVA (apenas o nome do arquivo) para evitar problemas de origem
-        const fileName = (function(){
+        // Construir uma URL RELATIVA (usar pathname sem query para evitar duplicar '?')
+        const pathname = (function(){
             try {
-                const p = window.location.pathname || '';
-                const name = p.split('/').pop();
-                return name || window.location.href;
+                // window.location.pathname NÃO contém query string; garante caminho relativo correto
+                return window.location.pathname || '/';
             } catch (e) {
-                return window.location.href;
+                return '/';
             }
         })();
 
-        const novaUrlRelativa = qs ? `${fileName}?${qs}` : fileName;
+        const hash = window.location.hash || '';
+
+        // montar relativa sem repetir '?' (pathname não tem query)
+        const novaUrlRelativa = qs ? `${pathname}${qs ? '?' + qs : ''}${hash}` : `${pathname}${hash}`;
 
         // Tentar atualizar o histórico de forma segura; falhar sem lançar erro se não for permitido
         try {
@@ -53,17 +55,16 @@
             // não abortamos — só não atualizamos o histórico
         }
 
-        // Atualizar campo de compartilhamento com a URL completa baseada na URL atual do documento
+        // Construir a URL completa a partir de origin + pathname (sem query)
         const baseAtual = (function(){
             try {
-                // usa a parte atual sem query string
-                return window.location.href.split('?')[0];
+                return (window.location.origin || window.location.protocol + '//' + window.location.host) + pathname + hash;
             } catch (e) {
-                return fileName;
+                return pathname;
             }
         })();
 
-        const shareUrlCompleta = qs ? `${baseAtual}?${qs}` : baseAtual;
+        const shareUrlCompleta = qs ? `${baseAtual}${baseAtual.includes('?') ? '&' : '?'}${qs}` : baseAtual;
 
         const shareEl = document.getElementById('shareUrl');
         if (shareEl) shareEl.value = shareUrlCompleta;
