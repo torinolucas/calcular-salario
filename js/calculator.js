@@ -211,6 +211,7 @@ function formatarMoeda(valor) {
     }).format(valor);
 }
 
+// ===== INICIALIZAÇÃO AUTOMÁTICA AO CARREGAR A PÁGINA =====
 
 document.addEventListener('DOMContentLoaded', function() {
     const mesAtual = new Date().getMonth() + 1;
@@ -226,10 +227,14 @@ document.addEventListener('DOMContentLoaded', function() {
         console.warn('calc-holiday-sunday.js não carregado: dias úteis não preenchidos automaticamente.');
     }
 
+    // Delegar inicialização da URL compartilhável para o módulo url-share (se presente)
+    if (window.urlShare && typeof window.urlShare.init === 'function') {
+        try { window.urlShare.init(); } catch (e) { console.warn('Erro ao iniciar urlShare:', e); }
+    }
+
     console.log('Calculadora de Salário carregada com sucesso!');
 });
 
-// ...existing code...
 (function prefillFromUrl(){
     const map = {
         salarioBase: 'salarioBase',
@@ -257,4 +262,3 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => calcularSalario(), 50);
     }
 })();
-// ...existing code...
