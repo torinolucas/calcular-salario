@@ -217,6 +217,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const mesAtual = new Date().getMonth() + 1;
     const anoAtual = new Date().getFullYear();
 
+    // preencher nome do mês em pt-BR no pequeno texto da UI
+    const mesesPt = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const nomeMes = mesesPt[(mesAtual - 1) % 12] || '';
+    const mesAtualEl = document.getElementById('mesAtualName');
+    if (mesAtualEl) mesAtualEl.textContent = `${nomeMes} ${anoAtual}`;
+
     if (window.calcHolidays && typeof window.calcHolidays.calcularDiasUteisMes === 'function') {
         const res = window.calcHolidays.calcularDiasUteisMes(mesAtual, anoAtual);
         const diasUteisInput = document.getElementById('diasUteis');

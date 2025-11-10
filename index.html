@@ -109,16 +109,21 @@
             <input type="number" id="heNoturna100" placeholder="Ex: 1.0">
         </div>
         <div class="input-item">
-            <label for="sobreaviso">Horas Sobreaviso</label>
-            <input type="number" id="sobreaviso" placeholder="Ex: 168">
-        </div>
-        <div class="input-item">
             <label for="diasUteis">Dias Úteis no Mês</label>
             <input type="number" id="diasUteis" placeholder="Ex: 22">
         </div>
         <div class="input-item">
             <label for="diasDescanso">Domingos e Feriados</label>
             <input type="number" id="diasDescanso" placeholder="Ex: 5">
+        </div>
+        <div class="input-item" style="grid-column: 1 / -1;">
+            <small id="mesAtualNote" style="color:#333; display:block; margin-top:6px;">
+                Dias úteis calculados para <strong id="mesAtualName">...</strong>, não considera feriados.
+            </small>
+        </div>
+        <div class="input-item">
+            <label for="sobreaviso">Horas Sobreaviso</label>
+            <input type="number" id="sobreaviso" placeholder="Ex: 168">
         </div>
     </div>
     <button onclick="calcularSalario()">Calcular Salário Líquido</button>
