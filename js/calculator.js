@@ -217,18 +217,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const mesAtual = new Date().getMonth() + 1;
     const anoAtual = new Date().getFullYear();
 
-    // preencher nome do mês em pt-BR no pequeno texto da UI
+    // verificar parâmetros da URL — se houver, eles têm prioridade
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasDiasUteisParam = urlParams.has('diasUteis');
+    const hasDiasDescansoParam = urlParams.has('diasDescanso');
+
+    // preencher nome do mês em pt-BR no pequeno texto da UI (se presente)
     const mesesPt = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
     const nomeMes = mesesPt[(mesAtual - 1) % 12] || '';
-    const mesAtualEl = document.getElementById('mesAtualName');
-    if (mesAtualEl) mesAtualEl.textContent = `${nomeMes} ${anoAtual}`;
+    const mesAtualNameEl = document.getElementById('mesAtualName');
+    const mesAtualNoteEl = document.getElementById('mesAtualNote');
+
+    // Se a URL especificou diasUteis e diasDescanso, esconder a mensagem informativa
+    if (hasDiasUteisParam && hasDiasDescansoParam) {
+        if (mesAtualNoteEl) mesAtualNoteEl.style.display = 'none';
+        // ainda podemos preencher os campos via prefillFromUrl (feito abaixo)
+    } else {
+        // mostrar e preencher o nome do mês
+        if (mesAtualNoteEl) mesAtualNoteEl.style.display = 'block';
+        if (mesAtualNameEl) mesAtualNameEl.textContent = `${nomeMes} ${anoAtual}`;
+    }
 
     if (window.calcHolidays && typeof window.calcHolidays.calcularDiasUteisMes === 'function') {
         const res = window.calcHolidays.calcularDiasUteisMes(mesAtual, anoAtual);
         const diasUteisInput = document.getElementById('diasUteis');
         const diasDescansoInput = document.getElementById('diasDescanso');
-        if (diasUteisInput) diasUteisInput.value = res.diasUteis;
-        if (diasDescansoInput) diasDescansoInput.value = res.domingos;
+
+        // se URL forneceu o valor, respeitar a URL (prioridade)
+        if (diasUteisInput) {
+            if (hasDiasUteisParam) {
+                diasUteisInput.value = urlParams.get('diasUteis');
+            } else {
+                diasUteisInput.value = res.diasUteis;
+            }
+        }
+
+        if (diasDescansoInput) {
+            if (hasDiasDescansoParam) {
+                diasDescansoInput.value = urlParams.get('diasDescanso');
+            } else {
+                diasDescansoInput.value = res.domingos;
+            }
+        }
     } else {
         console.warn('calc-holiday-sunday.js não carregado: dias úteis não preenchidos automaticamente.');
     }
@@ -249,7 +279,9 @@ document.addEventListener('DOMContentLoaded', function() {
         he100: 'he100',
         heNoturna75: 'heNoturna75',
         heNoturna100: 'heNoturna100',
-        sobreaviso: 'sobreaviso'
+        sobreaviso: 'sobreaviso',
+        diasUteis: 'diasUteis',       // ADICIONADO — permitir preencher via URL
+        diasDescanso: 'diasDescanso'  // ADICIONADO — permitir preencher via URL
     };
 
     const params = new URLSearchParams(window.location.search);
