@@ -47,30 +47,33 @@ function obterDadosEntrada() {
  * @returns {Object} Objeto com todos os cálculos de vencimentos
  */
 function calcularVencimentos(dados) {
-    // Cálculo do valor da hora: (Base + Bônus) / 200
-    const valorHora = (dados.salarioBase + dados.bonificacao) / 200;
+    // Função auxiliar de arredondamento para 2 casas decimais
+    const r2 = (v) => Math.round(v * 100) / 100;
+
+    // Cálculo do valor da hora: (Base + Bônus) / 200, arredondado para 2 casas
+    const valorHora = r2((dados.salarioBase + dados.bonificacao) / 200);
     
     // Cálculo das horas extras
-    const totalHE75 = dados.he75 * (valorHora * 1.75);
-    const totalHE100 = dados.he100 * (valorHora * 2.00);
+    const totalHE75 = r2(dados.he75 * (valorHora * 1.75));
+    const totalHE100 = r2(dados.he100 * (valorHora * 2.00));
     
     // Cálculo das horas extras noturnas (75% + adicional noturno 30%)
-    const totalHENoturna75 = dados.heNoturna75 * ((valorHora * 1.75) + (valorHora * 0.30));
+    const totalHENoturna75 = r2(dados.heNoturna75 * ((valorHora * 1.75) + (valorHora * 0.30)));
     
     // Cálculo das horas extras noturnas (100% + adicional noturno 30%)
-    const totalHENoturna100 = dados.heNoturna100 * ((valorHora * 2.00) + (valorHora * 0.30));
+    const totalHENoturna100 = r2(dados.heNoturna100 * ((valorHora * 2.00) + (valorHora * 0.30)));
     
     // Cálculo do sobreaviso (valor da hora dividido por 3)
-    const totalSobreaviso = dados.sobreaviso * (valorHora / 3);
+    const totalSobreaviso = r2(dados.sobreaviso * (valorHora / 3));
     
     // Total de valores variáveis
-    const totalVariaveis = totalHE75 + totalHE100 + totalHENoturna75 + totalHENoturna100 + totalSobreaviso;
+    const totalVariaveis = r2(totalHE75 + totalHE100 + totalHENoturna75 + totalHENoturna100 + totalSobreaviso);
     
-    // Cálculo do DSR (Descanso Semanal Remunerado)
-    const dsr = dados.diasUteis > 0 ? (totalVariaveis / dados.diasUteis) * dados.diasDescanso : 0;
+    // Cálculo do DSR (Descanso Semanal Remunerado) — arredondado para 2 casas
+    const dsr = dados.diasUteis > 0 ? r2((totalVariaveis / dados.diasUteis) * dados.diasDescanso) : 0;
     
-    // Salário bruto total
-    const salarioBruto = dados.salarioBase + dados.bonificacao + totalVariaveis + dsr;
+    // Salário bruto total — arredondado para 2 casas
+    const salarioBruto = r2(dados.salarioBase + dados.bonificacao + totalVariaveis + dsr);
     
     return {
         valorHora,
@@ -91,40 +94,63 @@ function calcularVencimentos(dados) {
  * @returns {Object} Objeto com os valores dos descontos e fórmulas explicativas
  */
 function calcularDescontos(salarioBruto) {
-    // ===== CÁLCULO DO INSS =====
+    // ===== CÁLCULO DO INSS (Portaria MPS/MF Nº 13 — Janeiro 2026) =====
+    // Cálculo progressivo por faixas
+    const TETO_INSS = 8475.55;
+    const salarioINSS = Math.min(salarioBruto, TETO_INSS);
+
     let descontoINSS = 0;
     let formulaINSSTexto = '';
-    
-    // Tabela INSS 2025 (com dedução): alíquotas e faixas de contribuição
-    if (salarioBruto <= 1518.00) {
-        // 1ª Faixa
-        descontoINSS = salarioBruto * 0.075;
-        formulaINSSTexto = `${salarioBruto.toFixed(2)} × 7,5% = ${descontoINSS.toFixed(2)}`;
-    } else if (salarioBruto <= 2793.88) {
-        // 2ª Faixa
-        descontoINSS = (salarioBruto * 0.09) - 22.77;
-        formulaINSSTexto = `(${salarioBruto.toFixed(2)} × 9%) - 22,77 = ${descontoINSS.toFixed(2)}`;
-    } else if (salarioBruto <= 4190.84) {
-        // 3ª Faixa
-        descontoINSS = (salarioBruto * 0.12) - 106.59;
-        formulaINSSTexto = `(${salarioBruto.toFixed(2)} × 12%) - 106,59 = ${descontoINSS.toFixed(2)}`;
-    } else if (salarioBruto <= 8150.50) {
-        // 4ª Faixa (até o teto)
-        descontoINSS = (salarioBruto * 0.14) - 190.41;
-        formulaINSSTexto = `(${salarioBruto.toFixed(2)} × 14%) - 190,41 = ${descontoINSS.toFixed(2)}`;
-    } else {
-        // Acima do teto, o desconto é fixo
-        descontoINSS = 950.66; // Valor do desconto sobre o teto: (8150.50 * 0.14) - 190.41
-        formulaINSSTexto = `Teto máximo INSS: R$ 950,66 (salário acima de R$ 8.150,50)`;
+    const partesFormula = [];
+
+    // 1ª Faixa: até R$ 1.621,00 → 7,5%
+    const faixa1 = Math.min(salarioINSS, 1621.00);
+    const desc1 = faixa1 * 0.075;
+    descontoINSS += desc1;
+    if (faixa1 > 0) partesFormula.push(`${faixa1.toFixed(2)} × 7,5% = ${desc1.toFixed(2)}`);
+
+    // 2ª Faixa: de R$ 1.621,01 até R$ 2.902,84 → 9%
+    if (salarioINSS > 1621.00) {
+        const faixa2 = Math.min(salarioINSS, 2902.84) - 1621.00;
+        const desc2 = faixa2 * 0.09;
+        descontoINSS += desc2;
+        partesFormula.push(`${faixa2.toFixed(2)} × 9% = ${desc2.toFixed(2)}`);
     }
-    
+
+    // 3ª Faixa: de R$ 2.902,85 até R$ 4.354,27 → 12%
+    if (salarioINSS > 2902.84) {
+        const faixa3 = Math.min(salarioINSS, 4354.27) - 2902.84;
+        const desc3 = faixa3 * 0.12;
+        descontoINSS += desc3;
+        partesFormula.push(`${faixa3.toFixed(2)} × 12% = ${desc3.toFixed(2)}`);
+    }
+
+    // 4ª Faixa: de R$ 4.354,28 até R$ 8.475,55 (Teto) → 14%
+    if (salarioINSS > 4354.27) {
+        const faixa4 = Math.min(salarioINSS, TETO_INSS) - 4354.27;
+        const desc4 = faixa4 * 0.14;
+        descontoINSS += desc4;
+        partesFormula.push(`${faixa4.toFixed(2)} × 14% = ${desc4.toFixed(2)}`);
+    }
+
+    // Arredondar para 2 casas decimais
+    descontoINSS = Math.round(descontoINSS * 100) / 100;
+
+    // Forçar valor fixo oficial da Portaria para salários acima do teto
+    if (salarioBruto > TETO_INSS) {
+        descontoINSS = 988.07;
+        formulaINSSTexto = `Teto máximo INSS: R$ 988,07 (salário acima de R$ ${TETO_INSS.toFixed(2)})`;
+    } else {
+        formulaINSSTexto = `${partesFormula.join(' + ')} = R$ ${descontoINSS.toFixed(2)}`;
+    }
+
     // ===== CÁLCULO DO IRRF =====
-    // A partir de maio de 2025, houve atualização: a primeira faixa passou a R$ 2.428,80, e o desconto simplificado foi ampliado para R$ 607,20. Na prática, isso garantiu a isenção de quem recebe até R$ 3.036,00, o equivalente a dois salários mínimos.
-    const baseIRRF = Math.min(salarioBruto - descontoINSS, salarioBruto - 607.20);
-    
+    // Base de cálculo: Salário Bruto arredondado - INSS arredondado, arredondado para 2 casas
+    const baseIRRF = Math.round((salarioBruto - descontoINSS) * 100) / 100;
+
     let descontoIRRF = 0;
     let formulaIRRFTexto = '';
-    
+
     // Faixas progressivas do IRRF (maio 2025)
     if (baseIRRF <= 2428.80) {
         descontoIRRF = 0; // Isento
@@ -142,10 +168,10 @@ function calcularDescontos(salarioBruto) {
         descontoIRRF = (baseIRRF * 0.275) - 908.73; // 27,5%
         formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 27,5% - 908,73 = ${descontoIRRF.toFixed(2)}`;
     }
-    
+
     // Garantir que o IRRF não seja negativo
     if (descontoIRRF < 0) descontoIRRF = 0;
-    
+
     return {
         inss: descontoINSS,
         irrf: descontoIRRF,
@@ -163,15 +189,15 @@ function calcularDescontos(salarioBruto) {
  */
 function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     // ===== EXIBIR DETALHES DOS GANHOS =====
-    document.getElementById('resValorHora').innerText = `R$ ${calculos.valorHora.toFixed(3)}`;
+    document.getElementById('resValorHora').innerText = `R$ ${calculos.valorHora.toFixed(2)}`;
     document.getElementById('formulaValorHora').innerHTML =
         `(<strong>${formatarMoeda(dados.salarioBase)} + ${formatarMoeda(dados.bonificacao)}</strong>) / 200`;
     
     document.getElementById('resHE75').innerText = `R$ ${calculos.totalHE75.toFixed(2)}`;
-    document.getElementById('formulaHE75').innerHTML = `<strong>${dados.he75}h</strong> × (R$ ${calculos.valorHora.toFixed(3)} × 1.75)`;
+    document.getElementById('formulaHE75').innerHTML = `<strong>${dados.he75}h</strong> × (R$ ${calculos.valorHora.toFixed(2)} × 1.75)`;
     
     document.getElementById('resHE100').innerText = `R$ ${calculos.totalHE100.toFixed(2)}`;
-    document.getElementById('formulaHE100').innerHTML = `<strong>${dados.he100}h</strong> × (R$ ${calculos.valorHora.toFixed(3)} × 2.00)`;
+    document.getElementById('formulaHE100').innerHTML = `<strong>${dados.he100}h</strong> × (R$ ${calculos.valorHora.toFixed(2)} × 2.00)`;
 
     document.getElementById('resHENoturna').innerText = `R$ ${calculos.totalHENoturna75.toFixed(2)}`;
     document.getElementById('formulaHENoturna').innerHTML = `<strong>${dados.heNoturna75}h</strong> × (H.E. 75% + Adic. Noturno 30%)`;
@@ -180,7 +206,7 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     document.getElementById('formulaHENoturna100').innerHTML = `<strong>${dados.heNoturna100}h</strong> × (H.E. 100% + Adic. Noturno 30%)`;
 
     document.getElementById('resSobreaviso').innerText = `R$ ${calculos.totalSobreaviso.toFixed(2)}`;
-    document.getElementById('formulaSobreaviso').innerHTML = `<strong>${dados.sobreaviso}h</strong> × (R$ ${calculos.valorHora.toFixed(3)} / 3)`;
+    document.getElementById('formulaSobreaviso').innerHTML = `<strong>${dados.sobreaviso}h</strong> × (R$ ${calculos.valorHora.toFixed(2)} / 3)`;
 
     document.getElementById('resDSR').innerText = `R$ ${calculos.dsr.toFixed(2)}`;
     document.getElementById('formulaDSR').innerHTML = `(Todas as H.E. + Sobreaviso = R$ ${calculos.totalVariaveis.toFixed(2)}) / <strong>${dados.diasUteis}</strong> dias úteis × <strong>${dados.diasDescanso}</strong> dias descanso`;
