@@ -205,11 +205,11 @@ function calcularImpostoTabela(base) {
  * @returns {Object} { aliquotaTexto, deducaoTexto }
  */
 function obterFaixaIRRF(base) {
-    if (base <= 2428.80) return { aliquotaTexto: '0%', deducaoTexto: '0,00' };
-    if (base <= 2826.65) return { aliquotaTexto: '7,5%', deducaoTexto: '182,16' };
-    if (base <= 3751.05) return { aliquotaTexto: '15%', deducaoTexto: '394,16' };
-    if (base <= 4664.68) return { aliquotaTexto: '22,5%', deducaoTexto: '675,49' };
-    return { aliquotaTexto: '27,5%', deducaoTexto: '908,73' };
+    if (base <= 2428.80) return { aliquota: 0, aliquotaTexto: '0%', deducao: 0, deducaoTexto: '0,00' };
+    if (base <= 2826.65) return { aliquota: 0.075, aliquotaTexto: '7,5%', deducao: 182.16, deducaoTexto: '182,16' };
+    if (base <= 3751.05) return { aliquota: 0.15, aliquotaTexto: '15%', deducao: 394.16, deducaoTexto: '394,16' };
+    if (base <= 4664.68) return { aliquota: 0.225, aliquotaTexto: '22,5%', deducao: 675.49, deducaoTexto: '675,49' };
+    return { aliquota: 0.275, aliquotaTexto: '27,5%', deducao: 908.73, deducaoTexto: '908,73' };
 }
 
 /**
@@ -223,25 +223,25 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     // ===== EXIBIR DETALHES DOS GANHOS =====
     document.getElementById('resValorHora').innerText = `R$ ${calculos.valorHora.toFixed(2)}`;
     document.getElementById('formulaValorHora').innerHTML =
-        `(<strong>${formatarMoeda(dados.salarioBase)} + ${formatarMoeda(dados.bonificacao)}</strong>) / 200`;
-    
+        `(${formatarMoeda(dados.salarioBase)} + ${formatarMoeda(dados.bonificacao)}) / 200`;
+
     document.getElementById('resHE75').innerText = `R$ ${calculos.totalHE75.toFixed(2)}`;
-    document.getElementById('formulaHE75').innerHTML = `<strong>${dados.he75}h</strong> × (R$ ${calculos.valorHora.toFixed(2)} × 1.75)`;
-    
+    document.getElementById('formulaHE75').innerHTML = `${dados.he75}h × (R$ ${calculos.valorHora.toFixed(2)} × 1.75)`;
+
     document.getElementById('resHE100').innerText = `R$ ${calculos.totalHE100.toFixed(2)}`;
-    document.getElementById('formulaHE100').innerHTML = `<strong>${dados.he100}h</strong> × (R$ ${calculos.valorHora.toFixed(2)} × 2.00)`;
+    document.getElementById('formulaHE100').innerHTML = `${dados.he100}h × (R$ ${calculos.valorHora.toFixed(2)} × 2.00)`;
 
     document.getElementById('resHENoturna').innerText = `R$ ${calculos.totalHENoturna75.toFixed(2)}`;
-    document.getElementById('formulaHENoturna').innerHTML = `<strong>${dados.heNoturna75}h</strong> × (H.E. 75% + Adic. Noturno 30%)`;
+    document.getElementById('formulaHENoturna').innerHTML = `${dados.heNoturna75}h × (H.E. 75% + Noturno 30%)`;
 
     document.getElementById('resHENoturna100').innerText = `R$ ${calculos.totalHENoturna100.toFixed(2)}`;
-    document.getElementById('formulaHENoturna100').innerHTML = `<strong>${dados.heNoturna100}h</strong> × (H.E. 100% + Adic. Noturno 30%)`;
+    document.getElementById('formulaHENoturna100').innerHTML = `${dados.heNoturna100}h × (H.E. 100% + Noturno 30%)`;
 
     document.getElementById('resSobreaviso').innerText = `R$ ${calculos.totalSobreaviso.toFixed(2)}`;
-    document.getElementById('formulaSobreaviso').innerHTML = `<strong>${dados.sobreaviso}h</strong> × (R$ ${calculos.valorHora.toFixed(2)} / 3)`;
+    document.getElementById('formulaSobreaviso').innerHTML = `${dados.sobreaviso}h × (R$ ${calculos.valorHora.toFixed(2)} / 3)`;
 
     document.getElementById('resDSR').innerText = `R$ ${calculos.dsr.toFixed(2)}`;
-    document.getElementById('formulaDSR').innerHTML = `(Todas as H.E. + Sobreaviso = R$ ${calculos.totalVariaveis.toFixed(2)}) / <strong>${dados.diasUteis}</strong> dias úteis × <strong>${dados.diasDescanso}</strong> dias descanso`;
+    document.getElementById('formulaDSR').innerHTML = `R$ ${calculos.totalVariaveis.toFixed(2)} / ${dados.diasUteis} dias úteis × ${dados.diasDescanso} descanso`;
 
     // ===== EXIBIR RESUMO FINANCEIRO =====
     document.getElementById('resBruto').innerText = `R$ ${calculos.salarioBruto.toFixed(2)}`;
@@ -249,9 +249,116 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     document.getElementById('resIRRF').innerText = `R$ ${descontos.irrf.toFixed(2)}`;
     document.getElementById('resLiquido').innerText = `R$ ${salarioLiquido.toFixed(2)}`;
     
-    // Usar as fórmulas calculadas na função calcularDescontos
-    document.getElementById('formulaINSS').innerText = descontos.formulaINSS;
-    document.getElementById('formulaIRRF').innerText = descontos.formulaIRRF;
+    // Fórmulas detalhadas ficam nos tooltips dinâmicos (tooltipINSS / tooltipIRRF)
+
+    // ===== PREENCHER TOOLTIPS DINÂMICOS =====
+    const baseIRRF = Math.round((calculos.salarioBruto - descontos.inss) * 100) / 100;
+
+    // Tooltip INSS — com soma acumulada
+    const tooltipINSS = document.getElementById('tooltipINSS');
+    if (tooltipINSS) {
+        const bruto = calculos.salarioBruto;
+        const teto = 8475.55;
+        const sal = Math.min(bruto, teto);
+        let soma = 0;
+        let linhas = '<strong>🧾 Como o INSS é calculado?</strong><br><br>';
+        linhas += 'Seu salário é dividido em faixas. Cada faixa paga um percentual diferente, e no final somamos tudo:<br><br>';
+
+        const f1 = Math.min(sal, 1621.00);
+        const d1 = Math.round(f1 * 0.075 * 100) / 100;
+        soma += d1;
+        linhas += '1️⃣ R$ ' + f1.toFixed(2) + ' × 7,5% = R$ ' + d1.toFixed(2) + '<br>';
+
+        if (sal > 1621.00) {
+            const f2 = Math.min(sal, 2902.84) - 1621.00;
+            const d2 = Math.round(f2 * 0.09 * 100) / 100;
+            soma += d2;
+            linhas += '2️⃣ R$ ' + f2.toFixed(2) + ' × 9% = R$ ' + d2.toFixed(2) + '<br>';
+        }
+        if (sal > 2902.84) {
+            const f3 = Math.min(sal, 4354.27) - 2902.84;
+            const d3 = Math.round(f3 * 0.12 * 100) / 100;
+            soma += d3;
+            linhas += '3️⃣ R$ ' + f3.toFixed(2) + ' × 12% = R$ ' + d3.toFixed(2) + '<br>';
+        }
+        if (sal > 4354.27) {
+            const f4 = Math.min(sal, teto) - 4354.27;
+            const d4 = Math.round(f4 * 0.14 * 100) / 100;
+            soma += d4;
+            linhas += '4️⃣ R$ ' + f4.toFixed(2) + ' × 14% = R$ ' + d4.toFixed(2) + '<br>';
+        }
+
+        linhas += '<br>Somando tudo:<br>';
+        linhas += 'R$ ' + d1.toFixed(2);
+        if (sal > 1621.00) {
+            const d2 = Math.round((Math.min(sal, 2902.84) - 1621.00) * 0.09 * 100) / 100;
+            linhas += ' + R$ ' + d2.toFixed(2);
+        }
+        if (sal > 2902.84) {
+            const d3 = Math.round((Math.min(sal, 4354.27) - 2902.84) * 0.12 * 100) / 100;
+            linhas += ' + R$ ' + d3.toFixed(2);
+        }
+        if (sal > 4354.27) {
+            const d4 = Math.round((Math.min(sal, teto) - 4354.27) * 0.14 * 100) / 100;
+            linhas += ' + R$ ' + d4.toFixed(2);
+        }
+        linhas += ' = <strong>R$ ' + descontos.inss.toFixed(2) + '</strong>';
+
+        if (bruto > teto) {
+            linhas += '<br><br>⚠️ Seu salário é maior que o teto (R$ 8.475,55). Mesmo ganhando mais, o máximo que se desconta de INSS é <strong>R$ 988,07</strong>.';
+        }
+
+        tooltipINSS.innerHTML = linhas;
+    }
+
+    // Tooltip IRRF — explicação clara por cenário
+    const tooltipIRRF = document.getElementById('tooltipIRRF');
+    if (tooltipIRRF) {
+        let linhas = '<strong>🧾 Como o Imposto de Renda é calculado?</strong><br><br>';
+        linhas += '<strong>Passo 1:</strong> Tirar o INSS do bruto:<br>';
+        linhas += 'R$ ' + calculos.salarioBruto.toFixed(2) + ' − R$ ' + descontos.inss.toFixed(2) + ' = <strong>R$ ' + baseIRRF.toFixed(2) + '</strong><br>';
+        linhas += '<small>(esse valor é a "base de cálculo")</small><br><br>';
+
+        if (baseIRRF <= 5000.00) {
+            linhas += '<strong>Passo 2:</strong> Verificar a faixa:<br>';
+            linhas += '✅ Até R$ 5.000 → <strong>Isento!</strong><br>';
+            linhas += 'Você não paga nada de IR.';
+
+        } else if (baseIRRF <= 7350.00) {
+            linhas += '<strong>Passo 2:</strong> Verificar a faixa:<br>';
+            linhas += 'Sua base (R$ ' + baseIRRF.toFixed(2) + ') está entre R$ 5.000 e R$ 7.350.<br><br>';
+
+            linhas += '<strong>Passo 3:</strong> Calcular o imposto normal:<br>';
+            const impostoTab = calcularImpostoTabela(baseIRRF);
+            const faixaInfo = obterFaixaIRRF(baseIRRF);
+            linhas += 'R$ ' + baseIRRF.toFixed(2) + ' × ' + faixaInfo.aliquotaTexto + ' − R$ ' + faixaInfo.deducaoTexto + ' = R$ ' + impostoTab.toFixed(2) + '<br><br>';
+
+            linhas += '<strong>Passo 4:</strong> Aplicar o benefício da reforma:<br>';
+            linhas += 'Quem ganha nessa faixa tem direito a pagar menos IR. ';
+            linhas += 'Quanto mais perto de R$ 5.000, maior o abatimento. ';
+            linhas += 'Quanto mais perto de R$ 7.350, menor o abatimento.<br><br>';
+            const redutor = Math.round(Math.max(978.62 - (0.133145 * baseIRRF), 0) * 100) / 100;
+            linhas += 'No seu caso, o abatimento é de R$ ' + redutor.toFixed(2) + '<br>';
+            linhas += 'R$ ' + impostoTab.toFixed(2) + ' − R$ ' + redutor.toFixed(2) + ' = <strong>R$ ' + descontos.irrf.toFixed(2) + '</strong>';
+
+        } else {
+            linhas += '<strong>Passo 2:</strong> Verificar a faixa:<br>';
+            linhas += 'Sua base (R$ ' + baseIRRF.toFixed(2) + ') é maior que R$ 7.350.<br>';
+            linhas += 'Nesse caso, o cálculo segue a tabela padrão sem benefício extra.<br><br>';
+
+            linhas += '<strong>Passo 3:</strong> Aplicar a porcentagem da sua faixa:<br>';
+            const faixa = obterFaixaIRRF(baseIRRF);
+            const valorBrutoIR = Math.round(baseIRRF * faixa.aliquota * 100) / 100;
+            linhas += 'R$ ' + baseIRRF.toFixed(2) + ' × ' + faixa.aliquotaTexto + ' = R$ ' + valorBrutoIR.toFixed(2) + '<br><br>';
+
+            linhas += '<strong>Passo 4:</strong> Subtrair o ajuste da faixa:<br>';
+            linhas += 'Cada faixa tem um valor de ajuste pra que você não pague a porcentagem cheia sobre tudo. ';
+            linhas += 'Na sua faixa (' + faixa.aliquotaTexto + '), o ajuste é R$ ' + faixa.deducaoTexto + '.<br><br>';
+            linhas += 'R$ ' + valorBrutoIR.toFixed(2) + ' − R$ ' + faixa.deducaoTexto + ' = <strong>R$ ' + descontos.irrf.toFixed(2) + '</strong>';
+        }
+
+        tooltipIRRF.innerHTML = linhas;
+    }
     
     // ===== MOSTRAR A SEÇÃO DE RESULTADOS =====
     document.getElementById('resultados').style.display = 'block';
@@ -313,13 +420,15 @@ function atualizarDiasPorMesAno() {
         var feriadosListaEl = document.getElementById('feriadosLista');
         if (feriadosListaEl) {
             if (res.feriadosNoMes && res.feriadosNoMes.length > 0) {
-                var nomes = [];
+                var linhas = '<span style="opacity:0.7">📅 Feriados neste mês:</span><br>';
                 for (var i = 0; i < res.feriadosNoMes.length; i++) {
                     var f = res.feriadosNoMes[i];
                     var dia = String(f.data.getDate()).padStart(2, '0');
-                    nomes.push(dia + ' — ' + f.nome);
+                    var diaSemana = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][f.data.getDay()];
+                    linhas += '&nbsp;&nbsp;' + dia + ' (' + diaSemana + ') — ' + f.nome;
+                    if (i < res.feriadosNoMes.length - 1) linhas += '<br>';
                 }
-                feriadosListaEl.innerHTML = '📅 Feriados: ' + nomes.join(' · ');
+                feriadosListaEl.innerHTML = linhas;
                 feriadosListaEl.style.display = 'block';
             } else {
                 feriadosListaEl.innerHTML = 'Nenhum feriado nacional neste mês.';
@@ -349,15 +458,17 @@ document.addEventListener('DOMContentLoaded', function() {
     if (mesRefEl) mesRefEl.value = urlParams.has('mesRef') ? urlParams.get('mesRef') : mesAtual;
     if (anoRefEl) anoRefEl.value = urlParams.has('anoRef') ? urlParams.get('anoRef') : anoAtual;
 
-    // Calcular dias úteis iniciais (se URL não forçou valores)
-    if (!hasDiasUteisParam || !hasDiasDescansoParam) {
-        atualizarDiasPorMesAno();
-    } else {
-        // URL tem prioridade — preencher via prefill e esconder nota
-        var mesAtualNoteEl = document.getElementById('mesAtualNote');
-        if (mesAtualNoteEl) mesAtualNoteEl.style.display = 'none';
-        var feriadosListaEl = document.getElementById('feriadosLista');
-        if (feriadosListaEl) feriadosListaEl.style.display = 'none';
+    // Sempre calcular feriados e info do mês
+    atualizarDiasPorMesAno();
+
+    // Se a URL forçou diasUteis/diasDescanso, sobrescrever os valores calculados
+    if (hasDiasUteisParam) {
+        var diasUteisInput = document.getElementById('diasUteis');
+        if (diasUteisInput) diasUteisInput.value = urlParams.get('diasUteis');
+    }
+    if (hasDiasDescansoParam) {
+        var diasDescansoInput = document.getElementById('diasDescanso');
+        if (diasDescansoInput) diasDescansoInput.value = urlParams.get('diasDescanso');
     }
 
     // Listeners para recalcular ao trocar mês/ano

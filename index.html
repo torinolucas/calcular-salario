@@ -5,14 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Salário</title>
     <link rel="stylesheet" href="css/styles.css">
-    <!-- Detectar tema antes do render para evitar flash -->
     <script>
       (function() {
         var saved = localStorage.getItem('theme');
         if (saved) {
           document.documentElement.setAttribute('data-theme', saved);
         } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.setAttribute('data-theme', 'dark');
+          // dark is default, no attribute needed
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
         }
       })();
     </script>
@@ -22,7 +23,7 @@
 <div class="container">
     <div class="header">
         <h1>Calculadora de Salário</h1>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema claro/escuro">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">
             <span class="theme-toggle-icon sun">☀️</span>
             <span class="theme-toggle-icon moon">🌙</span>
         </button>
@@ -31,7 +32,7 @@
     <div class="input-grid">
         <div class="input-item">
             <label for="salarioBase">Salário Base (R$)</label>
-            <input type="number" id="salarioBase" placeholder="Ex: 4065">
+            <input type="number" id="salarioBase" placeholder="4065">
         </div>
         <div class="input-item">
             <label for="bonificacao">Bonificação</label>
@@ -45,60 +46,31 @@
         <div class="input-item">
             <label for="he75">
                 Horas Extras 75%
-                <span class="tooltip">
-                    <span class="info-icon">i</span>
-                    <span class="tooltiptext">
-                        <strong>Hora Extra 75%</strong><br>
-                        Dia de semana, durante o dia.<br>
-                        Vale o valor da sua hora normal + 75% de acréscimo.
-                    </span>
-                </span>
+                <span class="tip"><i class="tip-icon">?</i><span class="tip-content">Dia de semana, durante o dia. Valor da hora + 75% de acréscimo.</span></span>
             </label>
-            <input type="number" id="he75" placeholder="Ex: 6.5">
+            <input type="number" id="he75" placeholder="6.5">
         </div>
         <div class="input-item">
             <label for="he100">
                 Horas Extras 100%
-                <span class="tooltip">
-                    <span class="info-icon">i</span>
-                    <span class="tooltiptext">
-                        <strong>Hora Extra 100%</strong><br>
-                        Final de semana ou feriado, durante o dia.<br>
-                        Vale o valor da sua hora normal + 100% de acréscimo.
-                    </span>
-                </span>
+                <span class="tip"><i class="tip-icon">?</i><span class="tip-content">Final de semana ou feriado, durante o dia. Valor da hora + 100% de acréscimo.</span></span>
             </label>
-            <input type="number" id="he100" placeholder="Ex: 2.5">
+            <input type="number" id="he100" placeholder="2.5">
         </div>
         <div class="input-item">
             <label for="heNoturna75">
                 H.E. Noturnas 75%
-                <span class="tooltip">
-                    <span class="info-icon">i</span>
-                    <span class="tooltiptext">
-                        <strong>Hora Extra Noturna 75%</strong><br>
-                        Dia de semana, durante a noite (22h às 5h).<br>
-                        Acréscimo de 75% (hora extra) + 30% (adicional noturno)
-                    </span>
-                </span>
+                <span class="tip"><i class="tip-icon">?</i><span class="tip-content">Dia de semana, à noite (22h–5h). Acréscimo de 75% + 30% adicional noturno.</span></span>
             </label>
-            <input type="number" id="heNoturna75" placeholder="Ex: 0.5">
+            <input type="number" id="heNoturna75" placeholder="0.5">
         </div>
         <div class="input-item">
             <label for="heNoturna100">
                 H.E. Noturnas 100%
-                <span class="tooltip">
-                    <span class="info-icon">i</span>
-                    <span class="tooltiptext">
-                        <strong>Hora Extra Noturna 100%</strong><br>
-                        Final de semana ou feriado, durante a noite (22h às 5h).<br>
-                        Acréscimo de 100% (hora extra) + 20% (adicional noturno).
-                    </span>
-                </span>
+                <span class="tip"><i class="tip-icon">?</i><span class="tip-content">Final de semana/feriado, à noite (22h–5h). Acréscimo de 100% + 20% adicional noturno.</span></span>
             </label>
-            <input type="number" id="heNoturna100" placeholder="Ex: 1.0">
+            <input type="number" id="heNoturna100" placeholder="1.0">
         </div>
-        <!-- Seletor de Mês/Ano -->
         <div class="input-item">
             <label for="mesRef">Mês de Referência</label>
             <select id="mesRef">
@@ -118,46 +90,77 @@
         </div>
         <div class="input-item">
             <label for="anoRef">Ano</label>
-            <input type="number" id="anoRef" min="2020" max="2040" placeholder="Ex: 2026">
+            <input type="number" id="anoRef" min="2020" max="2040" placeholder="2026">
         </div>
-
         <div class="input-item">
-            <label for="diasUteis">Dias Úteis no Mês</label>
-            <input type="number" id="diasUteis" placeholder="Ex: 22">
+            <label for="diasUteis">Dias Úteis</label>
+            <input type="number" id="diasUteis" placeholder="22">
         </div>
         <div class="input-item">
             <label for="diasDescanso">Domingos e Feriados</label>
-            <input type="number" id="diasDescanso" placeholder="Ex: 5">
+            <input type="number" id="diasDescanso" placeholder="5">
         </div>
         <div class="input-item" style="grid-column: 1 / -1;">
-            <small id="mesAtualNote" class="helper-note" style="display:block;">
-                <span id="mesAtualName"></span>
-            </small>
-            <small id="feriadosLista" class="helper-note" style="display:none; margin-top:4px;"></small>
+            <small id="mesAtualNote" class="helper-note" style="display:block;"><span id="mesAtualName"></span></small>
+            <small id="feriadosLista" class="helper-note" style="display:none; margin-top:3px;"></small>
         </div>
         <div class="input-item">
             <label for="sobreaviso">Horas Sobreaviso</label>
-            <input type="number" id="sobreaviso" placeholder="Ex: 168">
+            <input type="number" id="sobreaviso" placeholder="168">
         </div>
     </div>
 
     <button class="btn-calcular" onclick="calcularSalario()">Calcular Salário Líquido</button>
 
     <div id="resultados" class="results" style="display:none;">
-        <p class="section-title">Detalhes dos Ganhos</p>
-        <div class="detail-line"><span>Valor da Hora:</span><div class="value-block"><span id="resValorHora"></span><br><span class="formula" id="formulaValorHora"></span></div></div>
-        <div class="detail-line"><span>(+) Total H.E. 75%:</span><div class="value-block"><span id="resHE75"></span><br><span class="formula" id="formulaHE75"></span></div></div>
-        <div class="detail-line"><span>(+) Total H.E. 100%:</span><div class="value-block"><span id="resHE100"></span><br><span class="formula" id="formulaHE100"></span></div></div>
-        <div class="detail-line"><span>(+) Total H.E. Noturnas 75%:</span><div class="value-block"><span id="resHENoturna"></span><br><span class="formula" id="formulaHENoturna"></span></div></div>
-        <div class="detail-line"><span>(+) Total H.E. Noturnas 100%:</span><div class="value-block"><span id="resHENoturna100"></span><br><span class="formula" id="formulaHENoturna100"></span></div></div>
-        <div class="detail-line"><span>(+) Total Sobreaviso:</span><div class="value-block"><span id="resSobreaviso"></span><br><span class="formula" id="formulaSobreaviso"></span></div></div>
-        <div class="detail-line"><span>(+) DSR S/ H.E.:</span><div class="value-block"><span id="resDSR"></span><br><span class="formula" id="formulaDSR"></span></div></div>
+        <p class="section-title">Ganhos</p>
+        <div class="detail-line">
+            <span class="label">Valor da Hora</span>
+            <span class="value-col"><span id="resValorHora"></span><span class="formula" id="formulaValorHora"></span></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">Horas Extras 75%</span>
+            <span class="value-col"><span id="resHE75"></span><span class="formula" id="formulaHE75"></span></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">Horas Extras 100%</span>
+            <span class="value-col"><span id="resHE100"></span><span class="formula" id="formulaHE100"></span></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">H.E. Noturnas 75%</span>
+            <span class="value-col"><span id="resHENoturna"></span><span class="formula" id="formulaHENoturna"></span></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">H.E. Noturnas 100%</span>
+            <span class="value-col"><span id="resHENoturna100"></span><span class="formula" id="formulaHENoturna100"></span></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">Sobreaviso</span>
+            <span class="value-col"><span id="resSobreaviso"></span><span class="formula" id="formulaSobreaviso"></span></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">DSR <span class="tip"><i class="tip-icon">?</i><span class="tip-content">O DSR (Descanso Semanal Remunerado) é um valor extra que você recebe sobre suas horas extras e sobreaviso. A empresa pega o total dessas verbas variáveis, divide pelos dias úteis do mês e multiplica pelos domingos e feriados. É como se você também "ganhasse" esses extras nos dias de folga.</span></span></span>
+            <span class="value-col"><span id="resDSR"></span><span class="formula" id="formulaDSR"></span></span>
+        </div>
 
-        <p class="section-title">Resumo Financeiro</p>
-        <div class="result-line"><span>Salário Bruto Total:</span> <span id="resBruto"></span></div>
-        <div class="detail-line"><span>(-) Desconto INSS:</span><div class="value-block"><span id="resINSS"></span><br><span class="formula" id="formulaINSS"></span></div></div>
-        <div class="detail-line"><span>(-) Desconto IRRF:</span><div class="value-block"><span id="resIRRF"></span><br><span class="formula" id="formulaIRRF"></span></div></div>
-        <div class="result-line result-final"><span>Valor Líquido:</span> <span id="resLiquido"></span></div>
+        <p class="section-title">Descontos</p>
+        <div class="result-line">
+            <span class="label">Salário Bruto</span>
+            <span class="value" id="resBruto"></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">INSS <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="tooltipINSS">Clique em "Calcular" para ver o detalhamento.</span></span></span>
+            <span class="value" id="resINSS"></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">IRRF <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="tooltipIRRF">Clique em "Calcular" para ver o detalhamento.</span></span></span>
+            <span class="value" id="resIRRF"></span>
+        </div>
+
+        <div class="result-final">
+            <span class="label">Valor Líquido</span>
+            <span class="value" id="resLiquido"></span>
+        </div>
     </div>
 </div>
 
@@ -165,25 +168,29 @@
 <script src="js/calculator.js"></script>
 <script src="js/url-share.js"></script>
 <script>
-  // Theme toggle logic
   (function() {
     var toggle = document.getElementById('themeToggle');
     if (!toggle) return;
-
     function getTheme() {
-      return document.documentElement.getAttribute('data-theme') || 'light';
+      return document.documentElement.getAttribute('data-theme') || '';
     }
-
     toggle.addEventListener('click', function() {
-      var next = getTheme() === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
+      var isDark = getTheme() !== 'light';
+      var next = isDark ? 'light' : '';
+      if (next) {
+        document.documentElement.setAttribute('data-theme', next);
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+      localStorage.setItem('theme', next || 'dark');
     });
-
-    // Reagir a mudanças de preferência do sistema (se o user não salvou manualmente)
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
       if (!localStorage.getItem('theme')) {
-        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        if (e.matches) {
+          document.documentElement.removeAttribute('data-theme');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
       }
     });
   })();
