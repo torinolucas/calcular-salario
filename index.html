@@ -5,39 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora de Salário</title>
     <link rel="stylesheet" href="css/styles.css">
-    <style>
-        /* Estilo para deixar o select igual aos inputs do formulário */
-        .input-grid .input-item select,
-        .input-grid .input-item input[type="number"] {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 10px 12px;
-            font-size: 15px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            background: #fff;
-            color: #222;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
+    <!-- Detectar tema antes do render para evitar flash -->
+    <script>
+      (function() {
+        var saved = localStorage.getItem('theme');
+        if (saved) {
+          document.documentElement.setAttribute('data-theme', saved);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.setAttribute('data-theme', 'dark');
         }
-
-        /* manter ícone da seta visível sem quebrar o padding */
-        .input-grid .input-item select {
-            background-image: linear-gradient(45deg, transparent 50%, #666 50%),
-                              linear-gradient(135deg, #666 50%, transparent 50%),
-                              linear-gradient(to right, #ccc, #ccc);
-            background-position: calc(100% - 18px) calc(1em + 2px), calc(100% - 13px) calc(1em + 2px), 100% 0;
-            background-size: 6px 6px, 6px 6px, 1px 1.5em;
-            background-repeat: no-repeat;
-            padding-right: 36px; /* espaço para seta */
-        }
-    </style>
+      })();
+    </script>
 </head>
 <body>
 
 <div class="container">
-    <h1>Calculadora de Salário</h1>
+    <div class="header">
+        <h1>Calculadora de Salário</h1>
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema claro/escuro">
+            <span class="theme-toggle-icon sun">☀️</span>
+            <span class="theme-toggle-icon moon">🌙</span>
+        </button>
+    </div>
+
     <div class="input-grid">
         <div class="input-item">
             <label for="salarioBase">Salário Base (R$)</label>
@@ -46,7 +36,7 @@
         <div class="input-item">
             <label for="bonificacao">Bonificação</label>
             <select id="bonificacao">
-                <option value="0">Selecione (nenhuma)</option>
+                <option value="0">Nenhuma</option>
                 <option value="250">Practitioner</option>
                 <option value="1000">Associate</option>
                 <option value="2500">Professional/Specialty</option>
@@ -108,6 +98,29 @@
             </label>
             <input type="number" id="heNoturna100" placeholder="Ex: 1.0">
         </div>
+        <!-- Seletor de Mês/Ano -->
+        <div class="input-item">
+            <label for="mesRef">Mês de Referência</label>
+            <select id="mesRef">
+                <option value="1">Janeiro</option>
+                <option value="2">Fevereiro</option>
+                <option value="3">Março</option>
+                <option value="4">Abril</option>
+                <option value="5">Maio</option>
+                <option value="6">Junho</option>
+                <option value="7">Julho</option>
+                <option value="8">Agosto</option>
+                <option value="9">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+            </select>
+        </div>
+        <div class="input-item">
+            <label for="anoRef">Ano</label>
+            <input type="number" id="anoRef" min="2020" max="2040" placeholder="Ex: 2026">
+        </div>
+
         <div class="input-item">
             <label for="diasUteis">Dias Úteis no Mês</label>
             <input type="number" id="diasUteis" placeholder="Ex: 22">
@@ -117,17 +130,19 @@
             <input type="number" id="diasDescanso" placeholder="Ex: 5">
         </div>
         <div class="input-item" style="grid-column: 1 / -1;">
-            <small id="mesAtualNote" style="color:#333; display:block; margin-top:6px;">
-                Dias úteis calculados para <strong id="mesAtualName">...</strong>, não considera feriados.
+            <small id="mesAtualNote" class="helper-note" style="display:block;">
+                <span id="mesAtualName"></span>
             </small>
+            <small id="feriadosLista" class="helper-note" style="display:none; margin-top:4px;"></small>
         </div>
         <div class="input-item">
             <label for="sobreaviso">Horas Sobreaviso</label>
             <input type="number" id="sobreaviso" placeholder="Ex: 168">
         </div>
     </div>
-    <button onclick="calcularSalario()">Calcular Salário Líquido</button>
-    
+
+    <button class="btn-calcular" onclick="calcularSalario()">Calcular Salário Líquido</button>
+
     <div id="resultados" class="results" style="display:none;">
         <p class="section-title">Detalhes dos Ganhos</p>
         <div class="detail-line"><span>Valor da Hora:</span><div class="value-block"><span id="resValorHora"></span><br><span class="formula" id="formulaValorHora"></span></div></div>
@@ -137,7 +152,7 @@
         <div class="detail-line"><span>(+) Total H.E. Noturnas 100%:</span><div class="value-block"><span id="resHENoturna100"></span><br><span class="formula" id="formulaHENoturna100"></span></div></div>
         <div class="detail-line"><span>(+) Total Sobreaviso:</span><div class="value-block"><span id="resSobreaviso"></span><br><span class="formula" id="formulaSobreaviso"></span></div></div>
         <div class="detail-line"><span>(+) DSR S/ H.E.:</span><div class="value-block"><span id="resDSR"></span><br><span class="formula" id="formulaDSR"></span></div></div>
-        
+
         <p class="section-title">Resumo Financeiro</p>
         <div class="result-line"><span>Salário Bruto Total:</span> <span id="resBruto"></span></div>
         <div class="detail-line"><span>(-) Desconto INSS:</span><div class="value-block"><span id="resINSS"></span><br><span class="formula" id="formulaINSS"></span></div></div>
@@ -149,5 +164,29 @@
 <script src="js/calc-sunday.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/url-share.js"></script>
+<script>
+  // Theme toggle logic
+  (function() {
+    var toggle = document.getElementById('themeToggle');
+    if (!toggle) return;
+
+    function getTheme() {
+      return document.documentElement.getAttribute('data-theme') || 'light';
+    }
+
+    toggle.addEventListener('click', function() {
+      var next = getTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+    });
+
+    // Reagir a mudanças de preferência do sistema (se o user não salvou manualmente)
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+      if (!localStorage.getItem('theme')) {
+        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+      }
+    });
+  })();
+</script>
 </body>
 </html>

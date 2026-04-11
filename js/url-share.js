@@ -8,6 +8,8 @@
         'heNoturna75',
         'heNoturna100',
         'sobreaviso',
+        'mesRef',
+        'anoRef',
         'diasUteis',
         'diasDescanso'
     ];

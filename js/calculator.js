@@ -144,29 +144,35 @@ function calcularDescontos(salarioBruto) {
         formulaINSSTexto = `${partesFormula.join(' + ')} = R$ ${descontoINSS.toFixed(2)}`;
     }
 
-    // ===== CÁLCULO DO IRRF =====
-    // Base de cálculo: Salário Bruto arredondado - INSS arredondado, arredondado para 2 casas
+    // ===== CÁLCULO DO IRRF (Reforma Tributária 2026) =====
+    // Base de cálculo: Salário Bruto arredondado - INSS arredondado
     const baseIRRF = Math.round((salarioBruto - descontoINSS) * 100) / 100;
 
     let descontoIRRF = 0;
     let formulaIRRFTexto = '';
 
-    // Faixas progressivas do IRRF (maio 2025)
-    if (baseIRRF <= 2428.80) {
-        descontoIRRF = 0; // Isento
-        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} - Isento de IRRF`;
-    } else if (baseIRRF <= 2826.65) {
-        descontoIRRF = (baseIRRF * 0.075) - 182.16; // 7,5%
-        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 7,5% - 182,16 = ${descontoIRRF.toFixed(2)}`;
-    } else if (baseIRRF <= 3751.05) {
-        descontoIRRF = (baseIRRF * 0.15) - 394.16; // 15%
-        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 15% - 394,16 = ${descontoIRRF.toFixed(2)}`;
-    } else if (baseIRRF <= 4664.68) {
-        descontoIRRF = (baseIRRF * 0.225) - 675.49; // 22,5%
-        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 22,5% - 675,49 = ${descontoIRRF.toFixed(2)}`;
+    // 1) Isenção total: até R$ 5.000,00
+    if (baseIRRF <= 5000.00) {
+        descontoIRRF = 0;
+        formulaIRRFTexto = `Base IRRF: ${baseIRRF.toFixed(2)} — Isento (até R$ 5.000,00)`;
+
+    // 2) Faixa de redução gradual: R$ 5.000,01 a R$ 7.350,00
+    } else if (baseIRRF <= 7350.00) {
+        // Calcular imposto pela tabela progressiva tradicional
+        const impostoTabela = calcularImpostoTabela(baseIRRF);
+        // Redutor: 978,62 - (0,133145 × Base_IRRF)
+        const redutor = Math.round((978.62 - (0.133145 * baseIRRF)) * 100) / 100;
+        descontoIRRF = impostoTabela - (redutor > 0 ? redutor : 0);
+        if (descontoIRRF < 0) descontoIRRF = 0;
+        descontoIRRF = Math.round(descontoIRRF * 100) / 100;
+        formulaIRRFTexto = `Base IRRF: ${baseIRRF.toFixed(2)} — Tabela: ${impostoTabela.toFixed(2)} - Redutor: ${(redutor > 0 ? redutor : 0).toFixed(2)} = ${descontoIRRF.toFixed(2)}`;
+
+    // 3) Acima de R$ 7.350,00: tabela tradicional sem redutor
     } else {
-        descontoIRRF = (baseIRRF * 0.275) - 908.73; // 27,5%
-        formulaIRRFTexto = `Base Cálc. IRRF: ${baseIRRF.toFixed(2)} × 27,5% - 908,73 = ${descontoIRRF.toFixed(2)}`;
+        descontoIRRF = calcularImpostoTabela(baseIRRF);
+        descontoIRRF = Math.round(descontoIRRF * 100) / 100;
+        const faixaInfo = obterFaixaIRRF(baseIRRF);
+        formulaIRRFTexto = `Base IRRF: ${baseIRRF.toFixed(2)} × ${faixaInfo.aliquotaTexto} - ${faixaInfo.deducaoTexto} = ${descontoIRRF.toFixed(2)}`;
     }
 
     // Garantir que o IRRF não seja negativo
@@ -178,6 +184,32 @@ function calcularDescontos(salarioBruto) {
         formulaINSS: formulaINSSTexto,
         formulaIRRF: formulaIRRFTexto
     };
+}
+
+/**
+ * Calcula o imposto pela tabela progressiva tradicional do IRRF
+ * @param {number} base - Base de cálculo do IRRF
+ * @returns {number} Valor do imposto
+ */
+function calcularImpostoTabela(base) {
+    if (base <= 2428.80) return 0;
+    if (base <= 2826.65) return (base * 0.075) - 182.16;
+    if (base <= 3751.05) return (base * 0.15) - 394.16;
+    if (base <= 4664.68) return (base * 0.225) - 675.49;
+    return (base * 0.275) - 908.73;
+}
+
+/**
+ * Retorna info da faixa do IRRF para exibição na fórmula
+ * @param {number} base - Base de cálculo
+ * @returns {Object} { aliquotaTexto, deducaoTexto }
+ */
+function obterFaixaIRRF(base) {
+    if (base <= 2428.80) return { aliquotaTexto: '0%', deducaoTexto: '0,00' };
+    if (base <= 2826.65) return { aliquotaTexto: '7,5%', deducaoTexto: '182,16' };
+    if (base <= 3751.05) return { aliquotaTexto: '15%', deducaoTexto: '394,16' };
+    if (base <= 4664.68) return { aliquotaTexto: '22,5%', deducaoTexto: '675,49' };
+    return { aliquotaTexto: '27,5%', deducaoTexto: '908,73' };
 }
 
 /**
@@ -239,57 +271,101 @@ function formatarMoeda(valor) {
 
 // ===== INICIALIZAÇÃO AUTOMÁTICA AO CARREGAR A PÁGINA =====
 
-document.addEventListener('DOMContentLoaded', function() {
-    const mesAtual = new Date().getMonth() + 1;
-    const anoAtual = new Date().getFullYear();
+/**
+ * Atualiza dias úteis e descanso com base no mês/ano selecionado,
+ * considerando feriados nacionais.
+ */
+function atualizarDiasPorMesAno() {
+    var mesEl = document.getElementById('mesRef');
+    var anoEl = document.getElementById('anoRef');
+    if (!mesEl || !anoEl) return;
 
-    // verificar parâmetros da URL — se houver, eles têm prioridade
-    const urlParams = new URLSearchParams(window.location.search);
-    const hasDiasUteisParam = urlParams.has('diasUteis');
-    const hasDiasDescansoParam = urlParams.has('diasDescanso');
+    var mes = parseInt(mesEl.value, 10);
+    var ano = parseInt(anoEl.value, 10);
+    if (!mes || !ano || ano < 2020 || ano > 2040) return;
 
-    // preencher nome do mês em pt-BR no pequeno texto da UI (se presente)
-    const mesesPt = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    const nomeMes = mesesPt[(mesAtual - 1) % 12] || '';
-    const mesAtualNameEl = document.getElementById('mesAtualName');
-    const mesAtualNoteEl = document.getElementById('mesAtualNote');
-
-    // Se a URL especificou diasUteis e diasDescanso, esconder a mensagem informativa
-    if (hasDiasUteisParam && hasDiasDescansoParam) {
-        if (mesAtualNoteEl) mesAtualNoteEl.style.display = 'none';
-        // ainda podemos preencher os campos via prefillFromUrl (feito abaixo)
-    } else {
-        // mostrar e preencher o nome do mês
-        if (mesAtualNoteEl) mesAtualNoteEl.style.display = 'block';
-        if (mesAtualNameEl) mesAtualNameEl.textContent = `${nomeMes} ${anoAtual}`;
-    }
+    var mesesPt = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
     if (window.calcHolidays && typeof window.calcHolidays.calcularDiasUteisMes === 'function') {
-        const res = window.calcHolidays.calcularDiasUteisMes(mesAtual, anoAtual);
-        const diasUteisInput = document.getElementById('diasUteis');
-        const diasDescansoInput = document.getElementById('diasDescanso');
+        var res = window.calcHolidays.calcularDiasUteisMes(mes, ano);
 
-        // se URL forneceu o valor, respeitar a URL (prioridade)
-        if (diasUteisInput) {
-            if (hasDiasUteisParam) {
-                diasUteisInput.value = urlParams.get('diasUteis');
+        var diasUteisInput = document.getElementById('diasUteis');
+        var diasDescansoInput = document.getElementById('diasDescanso');
+        if (diasUteisInput) diasUteisInput.value = res.diasUteis;
+        if (diasDescansoInput) diasDescansoInput.value = res.descansoTotal;
+
+        // Atualizar nota informativa
+        var mesAtualNameEl = document.getElementById('mesAtualName');
+        var mesAtualNoteEl = document.getElementById('mesAtualNote');
+        if (mesAtualNameEl) {
+            var texto = mesesPt[mes - 1] + ' ' + ano + ': ' +
+                res.diasUteis + ' dias úteis, ' +
+                res.domingos + ' domingos';
+            if (res.feriadosEmDiaUtil > 0) {
+                texto += ', ' + res.feriadosEmDiaUtil + ' feriado' + (res.feriadosEmDiaUtil > 1 ? 's' : '') + ' em dia útil';
+            }
+            mesAtualNameEl.innerHTML = texto;
+        }
+        if (mesAtualNoteEl) mesAtualNoteEl.style.display = 'block';
+
+        // Listar feriados do mês
+        var feriadosListaEl = document.getElementById('feriadosLista');
+        if (feriadosListaEl) {
+            if (res.feriadosNoMes && res.feriadosNoMes.length > 0) {
+                var nomes = [];
+                for (var i = 0; i < res.feriadosNoMes.length; i++) {
+                    var f = res.feriadosNoMes[i];
+                    var dia = String(f.data.getDate()).padStart(2, '0');
+                    nomes.push(dia + ' — ' + f.nome);
+                }
+                feriadosListaEl.innerHTML = '📅 Feriados: ' + nomes.join(' · ');
+                feriadosListaEl.style.display = 'block';
             } else {
-                diasUteisInput.value = res.diasUteis;
+                feriadosListaEl.innerHTML = 'Nenhum feriado nacional neste mês.';
+                feriadosListaEl.style.display = 'block';
             }
         }
-
-        if (diasDescansoInput) {
-            if (hasDiasDescansoParam) {
-                diasDescansoInput.value = urlParams.get('diasDescanso');
-            } else {
-                diasDescansoInput.value = res.domingos;
-            }
-        }
-    } else {
-        console.warn('calc-holiday-sunday.js não carregado: dias úteis não preenchidos automaticamente.');
     }
 
-    // Delegar inicialização da URL compartilhável para o módulo url-share (se presente)
+    // Atualizar URL compartilhável se disponível
+    if (window.urlShare && typeof window.urlShare.atualizarUrlCompartilhavel === 'function') {
+        window.urlShare.atualizarUrlCompartilhavel();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var mesAtual = new Date().getMonth() + 1;
+    var anoAtual = new Date().getFullYear();
+
+    // Verificar parâmetros da URL
+    var urlParams = new URLSearchParams(window.location.search);
+    var hasDiasUteisParam = urlParams.has('diasUteis');
+    var hasDiasDescansoParam = urlParams.has('diasDescanso');
+
+    // Preencher seletores de mês/ano
+    var mesRefEl = document.getElementById('mesRef');
+    var anoRefEl = document.getElementById('anoRef');
+    if (mesRefEl) mesRefEl.value = urlParams.has('mesRef') ? urlParams.get('mesRef') : mesAtual;
+    if (anoRefEl) anoRefEl.value = urlParams.has('anoRef') ? urlParams.get('anoRef') : anoAtual;
+
+    // Calcular dias úteis iniciais (se URL não forçou valores)
+    if (!hasDiasUteisParam || !hasDiasDescansoParam) {
+        atualizarDiasPorMesAno();
+    } else {
+        // URL tem prioridade — preencher via prefill e esconder nota
+        var mesAtualNoteEl = document.getElementById('mesAtualNote');
+        if (mesAtualNoteEl) mesAtualNoteEl.style.display = 'none';
+        var feriadosListaEl = document.getElementById('feriadosLista');
+        if (feriadosListaEl) feriadosListaEl.style.display = 'none';
+    }
+
+    // Listeners para recalcular ao trocar mês/ano
+    if (mesRefEl) mesRefEl.addEventListener('change', atualizarDiasPorMesAno);
+    if (anoRefEl) anoRefEl.addEventListener('change', atualizarDiasPorMesAno);
+    if (anoRefEl) anoRefEl.addEventListener('input', atualizarDiasPorMesAno);
+
+    // Delegar inicialização da URL compartilhável
     if (window.urlShare && typeof window.urlShare.init === 'function') {
         try { window.urlShare.init(); } catch (e) { console.warn('Erro ao iniciar urlShare:', e); }
     }
@@ -306,8 +382,10 @@ document.addEventListener('DOMContentLoaded', function() {
         heNoturna75: 'heNoturna75',
         heNoturna100: 'heNoturna100',
         sobreaviso: 'sobreaviso',
-        diasUteis: 'diasUteis',       // ADICIONADO — permitir preencher via URL
-        diasDescanso: 'diasDescanso'  // ADICIONADO — permitir preencher via URL
+        mesRef: 'mesRef',
+        anoRef: 'anoRef',
+        diasUteis: 'diasUteis',
+        diasDescanso: 'diasDescanso'
     };
 
     const params = new URLSearchParams(window.location.search);
