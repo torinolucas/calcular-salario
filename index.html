@@ -23,10 +23,13 @@
 <div class="container">
     <div class="header">
         <h1>Calculadora de Salário</h1>
-        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">
-            <span class="theme-toggle-icon sun">☀️</span>
-            <span class="theme-toggle-icon moon">🌙</span>
-        </button>
+        <div class="header-actions">
+            <button class="btn-reset-header" onclick="resetarCampos()" title="Limpar campos" aria-label="Limpar campos">Resetar campos</button>
+            <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">
+                <span class="theme-toggle-icon sun">☀️</span>
+                <span class="theme-toggle-icon moon">🌙</span>
+            </button>
+        </div>
     </div>
 
     <div class="input-grid">
@@ -59,14 +62,14 @@
         </div>
         <div class="input-item">
             <label for="heNoturna75">
-                H.E. Noturnas 75%
+                Horas Extras Noturnas 75%
                 <span class="tip"><i class="tip-icon">?</i><span class="tip-content">Dia de semana, à noite (22h–5h). Acréscimo de 75% + 30% adicional noturno.</span></span>
             </label>
             <input type="number" id="heNoturna75" placeholder="0.5">
         </div>
         <div class="input-item">
             <label for="heNoturna100">
-                H.E. Noturnas 100%
+                Horas Extras Noturnas 100%
                 <span class="tip"><i class="tip-icon">?</i><span class="tip-content">Final de semana/feriado, à noite (22h–5h). Acréscimo de 100% + 20% adicional noturno.</span></span>
             </label>
             <input type="number" id="heNoturna100" placeholder="1.0">
@@ -110,50 +113,63 @@
         </div>
     </div>
 
-    <button class="btn-calcular" onclick="calcularSalario()">Calcular Salário Líquido</button>
-
     <div id="resultados" class="results" style="display:none;">
         <p class="section-title">Ganhos</p>
-        <div class="detail-line">
-            <span class="label">Valor da Hora</span>
-            <span class="value-col"><span id="resValorHora"></span><span class="formula" id="formulaValorHora"></span></span>
+        <div class="result-header">
+            <span class="label">Descrição</span>
+            <span class="ref">Qtd.</span>
+            <span class="value">Valor</span>
         </div>
         <div class="detail-line">
-            <span class="label">Horas Extras 75%</span>
-            <span class="value-col"><span id="resHE75"></span><span class="formula" id="formulaHE75"></span></span>
+            <span class="label">Valor da Hora <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="formulaValorHora"></span></span></span>
+            <span class="ref"></span>
+            <span class="value" id="resValorHora"></span>
         </div>
         <div class="detail-line">
-            <span class="label">Horas Extras 100%</span>
-            <span class="value-col"><span id="resHE100"></span><span class="formula" id="formulaHE100"></span></span>
+            <span class="label">Horas Extras 75% <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="formulaHE75"></span></span></span>
+            <span class="ref" id="refHE75"></span>
+            <span class="value" id="resHE75"></span>
         </div>
         <div class="detail-line">
-            <span class="label">H.E. Noturnas 75%</span>
-            <span class="value-col"><span id="resHENoturna"></span><span class="formula" id="formulaHENoturna"></span></span>
+            <span class="label">Horas Extras 100% <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="formulaHE100"></span></span></span>
+            <span class="ref" id="refHE100"></span>
+            <span class="value" id="resHE100"></span>
         </div>
         <div class="detail-line">
-            <span class="label">H.E. Noturnas 100%</span>
-            <span class="value-col"><span id="resHENoturna100"></span><span class="formula" id="formulaHENoturna100"></span></span>
+            <span class="label">Horas Extras Noturnas 75% <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="formulaHENoturna"></span></span></span>
+            <span class="ref" id="refHENoturna75"></span>
+            <span class="value" id="resHENoturna"></span>
         </div>
         <div class="detail-line">
-            <span class="label">Sobreaviso</span>
-            <span class="value-col"><span id="resSobreaviso"></span><span class="formula" id="formulaSobreaviso"></span></span>
+            <span class="label">Horas Extras Noturnas 100% <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="formulaHENoturna100"></span></span></span>
+            <span class="ref" id="refHENoturna100"></span>
+            <span class="value" id="resHENoturna100"></span>
         </div>
         <div class="detail-line">
-            <span class="label">DSR <span class="tip"><i class="tip-icon">?</i><span class="tip-content">O DSR (Descanso Semanal Remunerado) é um valor extra que você recebe sobre suas horas extras e sobreaviso. A empresa pega o total dessas verbas variáveis, divide pelos dias úteis do mês e multiplica pelos domingos e feriados. É como se você também "ganhasse" esses extras nos dias de folga.</span></span></span>
-            <span class="value-col"><span id="resDSR"></span><span class="formula" id="formulaDSR"></span></span>
+            <span class="label">Sobreaviso <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="formulaSobreaviso"></span></span></span>
+            <span class="ref" id="refSobreaviso"></span>
+            <span class="value" id="resSobreaviso"></span>
+        </div>
+        <div class="detail-line">
+            <span class="label">DSR <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="formulaDSR">O DSR (Descanso Semanal Remunerado) é um valor extra que você recebe sobre suas horas extras e sobreaviso. A empresa pega o total dessas verbas variáveis, divide pelos dias úteis do mês e multiplica pelos domingos e feriados.</span></span></span>
+            <span class="ref"></span>
+            <span class="value" id="resDSR"></span>
         </div>
 
         <p class="section-title">Descontos</p>
         <div class="result-line">
             <span class="label">Salário Bruto</span>
+            <span class="ref"></span>
             <span class="value" id="resBruto"></span>
         </div>
         <div class="detail-line">
-            <span class="label">INSS <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="tooltipINSS">Clique em "Calcular" para ver o detalhamento.</span></span></span>
+            <span class="label">INSS <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="tooltipINSS">Calcule para ver o detalhamento.</span></span></span>
+            <span class="ref"></span>
             <span class="value" id="resINSS"></span>
         </div>
         <div class="detail-line">
-            <span class="label">IRRF <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="tooltipIRRF">Clique em "Calcular" para ver o detalhamento.</span></span></span>
+            <span class="label">IRRF <span class="tip"><i class="tip-icon">?</i><span class="tip-content" id="tooltipIRRF">Calcule para ver o detalhamento.</span></span></span>
+            <span class="ref"></span>
             <span class="value" id="resIRRF"></span>
         </div>
 

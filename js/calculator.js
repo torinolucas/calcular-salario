@@ -221,33 +221,38 @@ function obterFaixaIRRF(base) {
  */
 function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     // ===== EXIBIR DETALHES DOS GANHOS =====
-    document.getElementById('resValorHora').innerText = `R$ ${calculos.valorHora.toFixed(2)}`;
+    document.getElementById('resValorHora').innerText = formatarMoeda(calculos.valorHora);
     document.getElementById('formulaValorHora').innerHTML =
         `(${formatarMoeda(dados.salarioBase)} + ${formatarMoeda(dados.bonificacao)}) / 200`;
 
-    document.getElementById('resHE75').innerText = `R$ ${calculos.totalHE75.toFixed(2)}`;
-    document.getElementById('formulaHE75').innerHTML = `${dados.he75}h × (R$ ${calculos.valorHora.toFixed(2)} × 1.75)`;
+    document.getElementById('resHE75').innerText = formatarMoeda(calculos.totalHE75);
+    document.getElementById('refHE75').innerText = formatarHoras(dados.he75);
+    document.getElementById('formulaHE75').innerHTML = `${dados.he75}h × (${formatarMoeda(calculos.valorHora)} × 1.75)`;
 
-    document.getElementById('resHE100').innerText = `R$ ${calculos.totalHE100.toFixed(2)}`;
-    document.getElementById('formulaHE100').innerHTML = `${dados.he100}h × (R$ ${calculos.valorHora.toFixed(2)} × 2.00)`;
+    document.getElementById('resHE100').innerText = formatarMoeda(calculos.totalHE100);
+    document.getElementById('refHE100').innerText = formatarHoras(dados.he100);
+    document.getElementById('formulaHE100').innerHTML = `${dados.he100}h × (${formatarMoeda(calculos.valorHora)} × 2.00)`;
 
-    document.getElementById('resHENoturna').innerText = `R$ ${calculos.totalHENoturna75.toFixed(2)}`;
-    document.getElementById('formulaHENoturna').innerHTML = `${dados.heNoturna75}h × (H.E. 75% + Noturno 30%)`;
+    document.getElementById('resHENoturna').innerText = formatarMoeda(calculos.totalHENoturna75);
+    document.getElementById('refHENoturna75').innerText = formatarHoras(dados.heNoturna75);
+    document.getElementById('formulaHENoturna').innerHTML = `${dados.heNoturna75}h × (Horas Extras 75% + Noturno 30%)`;
 
-    document.getElementById('resHENoturna100').innerText = `R$ ${calculos.totalHENoturna100.toFixed(2)}`;
-    document.getElementById('formulaHENoturna100').innerHTML = `${dados.heNoturna100}h × (H.E. 100% + Noturno 30%)`;
+    document.getElementById('resHENoturna100').innerText = formatarMoeda(calculos.totalHENoturna100);
+    document.getElementById('refHENoturna100').innerText = formatarHoras(dados.heNoturna100);
+    document.getElementById('formulaHENoturna100').innerHTML = `${dados.heNoturna100}h × (Horas Extras 100% + Noturno 30%)`;
 
-    document.getElementById('resSobreaviso').innerText = `R$ ${calculos.totalSobreaviso.toFixed(2)}`;
-    document.getElementById('formulaSobreaviso').innerHTML = `${dados.sobreaviso}h × (R$ ${calculos.valorHora.toFixed(2)} / 3)`;
+    document.getElementById('resSobreaviso').innerText = formatarMoeda(calculos.totalSobreaviso);
+    document.getElementById('refSobreaviso').innerText = formatarHoras(dados.sobreaviso);
+    document.getElementById('formulaSobreaviso').innerHTML = `${dados.sobreaviso}h × (${formatarMoeda(calculos.valorHora)} / 3)`;
 
-    document.getElementById('resDSR').innerText = `R$ ${calculos.dsr.toFixed(2)}`;
-    document.getElementById('formulaDSR').innerHTML = `R$ ${calculos.totalVariaveis.toFixed(2)} / ${dados.diasUteis} dias úteis × ${dados.diasDescanso} descanso`;
+    document.getElementById('resDSR').innerText = formatarMoeda(calculos.dsr);
+    document.getElementById('formulaDSR').innerHTML = `<strong>DSR (Descanso Semanal Remunerado)</strong><br>Valor extra sobre suas horas extras e sobreaviso nos dias de folga.<br><br>${formatarMoeda(calculos.totalVariaveis)} / ${dados.diasUteis} dias úteis × ${dados.diasDescanso} descanso`;
 
     // ===== EXIBIR RESUMO FINANCEIRO =====
-    document.getElementById('resBruto').innerText = `R$ ${calculos.salarioBruto.toFixed(2)}`;
-    document.getElementById('resINSS').innerText = `R$ ${descontos.inss.toFixed(2)}`;
-    document.getElementById('resIRRF').innerText = `R$ ${descontos.irrf.toFixed(2)}`;
-    document.getElementById('resLiquido').innerText = `R$ ${salarioLiquido.toFixed(2)}`;
+    document.getElementById('resBruto').innerText = formatarMoeda(calculos.salarioBruto);
+    document.getElementById('resINSS').innerText = formatarMoeda(descontos.inss);
+    document.getElementById('resIRRF').innerText = formatarMoeda(descontos.irrf);
+    document.getElementById('resLiquido').innerText = formatarMoeda(salarioLiquido);
     
     // Fórmulas detalhadas ficam nos tooltips dinâmicos (tooltipINSS / tooltipIRRF)
 
@@ -361,7 +366,121 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     }
     
     // ===== MOSTRAR A SEÇÃO DE RESULTADOS =====
-    document.getElementById('resultados').style.display = 'block';
+    const resultadosEl = document.getElementById('resultados');
+    resultadosEl.style.display = 'block';
+
+    // ===== ESCONDER LINHAS ZERADAS =====
+    const linhasGanhos = [
+        { id: 'resHE75', valor: calculos.totalHE75 },
+        { id: 'resHE100', valor: calculos.totalHE100 },
+        { id: 'resHENoturna', valor: calculos.totalHENoturna75 },
+        { id: 'resHENoturna100', valor: calculos.totalHENoturna100 },
+        { id: 'resSobreaviso', valor: calculos.totalSobreaviso },
+        { id: 'resDSR', valor: calculos.dsr }
+    ];
+    linhasGanhos.forEach(function(item) {
+        const el = document.getElementById(item.id);
+        if (el && el.closest('.detail-line')) {
+            el.closest('.detail-line').style.display = item.valor === 0 ? 'none' : 'flex';
+        }
+    });
+
+    // ===== ANIMAÇÃO DE CONTAGEM NO VALOR LÍQUIDO =====
+    animarValor('resLiquido', salarioLiquido);
+
+    // ===== SALVAR NO LOCALSTORAGE =====
+    salvarDadosLocal();
+}
+
+/**
+ * Animação de contagem para o valor líquido
+ */
+function animarValor(elementId, valorFinal) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const duracao = 600;
+    const inicio = performance.now();
+    const valorInicial = 0;
+
+    function step(timestamp) {
+        const progresso = Math.min((timestamp - inicio) / duracao, 1);
+        // Easing: ease-out cubic
+        const ease = 1 - Math.pow(1 - progresso, 3);
+        const valorAtual = valorInicial + (valorFinal - valorInicial) * ease;
+        el.innerText = formatarMoeda(valorAtual);
+        if (progresso < 1) {
+            requestAnimationFrame(step);
+        }
+    }
+    requestAnimationFrame(step);
+}
+
+/**
+ * Salva os valores dos inputs no localStorage
+ */
+function salvarDadosLocal() {
+    var campos = ['salarioBase','bonificacao','he75','he100','heNoturna75','heNoturna100','sobreaviso'];
+    var dados = {};
+    campos.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) dados[id] = el.value;
+    });
+    try { localStorage.setItem('calcSalario_dados', JSON.stringify(dados)); } catch(e) {}
+}
+
+/**
+ * Restaura os valores dos inputs do localStorage
+ */
+function restaurarDadosLocal() {
+    try {
+        var dados = JSON.parse(localStorage.getItem('calcSalario_dados'));
+        if (!dados) return false;
+        var preencheu = false;
+        for (var id in dados) {
+            var el = document.getElementById(id);
+            if (el && dados[id] && dados[id] !== '0' && dados[id] !== '') {
+                el.value = dados[id];
+                preencheu = true;
+            }
+        }
+        return preencheu;
+    } catch(e) { return false; }
+}
+
+/**
+ * Reseta todos os campos e esconde resultados
+ */
+function resetarCampos() {
+    var campos = ['salarioBase','he75','he100','heNoturna75','heNoturna100','sobreaviso'];
+    campos.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    var bonEl = document.getElementById('bonificacao');
+    if (bonEl) bonEl.value = '0';
+    // Resetar mês/ano para o atual
+    var mesRefEl = document.getElementById('mesRef');
+    var anoRefEl = document.getElementById('anoRef');
+    if (mesRefEl) mesRefEl.value = new Date().getMonth() + 1;
+    if (anoRefEl) anoRefEl.value = new Date().getFullYear();
+    document.getElementById('resultados').style.display = 'none';
+    try { localStorage.removeItem('calcSalario_dados'); } catch(e) {}
+    // Recalcular dias úteis pro mês atual
+    atualizarDiasPorMesAno();
+    // Atualizar URL
+    if (window.urlShare && typeof window.urlShare.atualizarUrlCompartilhavel === 'function') {
+        window.urlShare.atualizarUrlCompartilhavel();
+    }
+}
+
+/**
+ * Formata horas decimais para formato HH:MM (ex: 2.5 → "2:30")
+ */
+function formatarHoras(horasDecimal) {
+    if (!horasDecimal || horasDecimal === 0) return '-';
+    var h = Math.floor(horasDecimal);
+    var m = Math.round((horasDecimal - h) * 60);
+    return h + ':' + String(m).padStart(2, '0') + 'h';
 }
 
 /**
@@ -479,6 +598,43 @@ document.addEventListener('DOMContentLoaded', function() {
     // Delegar inicialização da URL compartilhável
     if (window.urlShare && typeof window.urlShare.init === 'function') {
         try { window.urlShare.init(); } catch (e) { console.warn('Erro ao iniciar urlShare:', e); }
+    }
+
+    // ===== RESTAURAR DADOS DO LOCALSTORAGE (se não veio da URL) =====
+    var urlParams2 = new URLSearchParams(window.location.search);
+    if (!urlParams2.has('salarioBase')) {
+        restaurarDadosLocal();
+    }
+
+    // ===== CÁLCULO AUTOMÁTICO AO DIGITAR =====
+    var _calcTimer = null;
+    function calcularComDebounce() {
+        clearTimeout(_calcTimer);
+        _calcTimer = setTimeout(function() {
+            var salBase = parseFloat(document.getElementById('salarioBase').value) || 0;
+            if (salBase > 0) {
+                calcularSalario();
+            }
+        }, 400);
+    }
+
+    var camposAutoCalc = ['salarioBase','bonificacao','he75','he100','heNoturna75','heNoturna100','sobreaviso','diasUteis','diasDescanso'];
+    camposAutoCalc.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', calcularComDebounce);
+            el.addEventListener('change', calcularComDebounce);
+        }
+    });
+
+    // Recalcular também ao trocar mês/ano (após atualizar dias)
+    if (mesRefEl) mesRefEl.addEventListener('change', function() { setTimeout(calcularComDebounce, 50); });
+    if (anoRefEl) anoRefEl.addEventListener('input', function() { setTimeout(calcularComDebounce, 50); });
+
+    // Se já tem salário base (restaurado ou via URL), calcular automaticamente
+    var salBaseInicial = parseFloat(document.getElementById('salarioBase').value) || 0;
+    if (salBaseInicial > 0) {
+        setTimeout(function() { calcularSalario(); }, 100);
     }
 
     console.log('Calculadora de Salário carregada com sucesso!');
