@@ -417,6 +417,14 @@ function animarValor(elementId, valorFinal) {
 
 
 /**
+ * Mostra ou esconde a badge indicando que o salário base veio do localStorage
+ */
+function mostrarBadgeSalarioSalvo(mostrar) {
+    var badge = document.getElementById('salarioBaseSalvoBadge');
+    if (badge) badge.style.display = mostrar ? 'inline-flex' : 'none';
+}
+
+/**
  * Reseta todos os campos e esconde resultados
  */
 function resetarCampos() {
@@ -433,6 +441,8 @@ function resetarCampos() {
     if (mesRefEl) mesRefEl.value = new Date().getMonth() + 1;
     if (anoRefEl) anoRefEl.value = new Date().getFullYear();
     document.getElementById('resultados').style.display = 'none';
+    try { localStorage.removeItem('calcSalario_salarioBase'); } catch(e) {}
+    mostrarBadgeSalarioSalvo(false);
     // Recalcular dias úteis pro mês atual
     atualizarDiasPorMesAno();
     // Atualizar URL
@@ -568,6 +578,20 @@ document.addEventListener('DOMContentLoaded', function() {
         try { window.urlShare.init(); } catch (e) { console.warn('Erro ao iniciar urlShare:', e); }
     }
 
+    // ===== RESTAURAR SALÁRIO BASE DO LOCALSTORAGE (se não veio da URL) =====
+    if (!urlParams.has('salarioBase')) {
+        try {
+            var salarioSalvo = localStorage.getItem('calcSalario_salarioBase');
+            if (salarioSalvo && salarioSalvo !== '0' && salarioSalvo !== '') {
+                var salarioBaseEl = document.getElementById('salarioBase');
+                if (salarioBaseEl && !salarioBaseEl.value) {
+                    salarioBaseEl.value = salarioSalvo;
+                    mostrarBadgeSalarioSalvo(true);
+                }
+            }
+        } catch(e) {}
+    }
+
     // ===== CÁLCULO AUTOMÁTICO AO DIGITAR =====
     var _calcTimer = null;
     function calcularComDebounce() {
@@ -588,6 +612,22 @@ document.addEventListener('DOMContentLoaded', function() {
             el.addEventListener('change', calcularComDebounce);
         }
     });
+
+    // Salvar salário base no localStorage ao digitar e esconder badge
+    var salarioBaseInput = document.getElementById('salarioBase');
+    if (salarioBaseInput) {
+        salarioBaseInput.addEventListener('input', function() {
+            mostrarBadgeSalarioSalvo(false);
+            try {
+                var val = salarioBaseInput.value.trim();
+                if (val && val !== '0') {
+                    localStorage.setItem('calcSalario_salarioBase', val);
+                } else {
+                    localStorage.removeItem('calcSalario_salarioBase');
+                }
+            } catch(e) {}
+        });
+    }
 
     // Recalcular também ao trocar mês/ano (após atualizar dias)
     if (mesRefEl) mesRefEl.addEventListener('change', function() { setTimeout(calcularComDebounce, 50); });

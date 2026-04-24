@@ -217,6 +217,22 @@ select {
 }
 .helper-note strong { color: var(--text-primary); }
 
+/* --- Saved Badge (salário base do localStorage) --- */
+.saved-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--accent);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.saved-badge::before {
+  content: "💾";
+  font-size: 10px;
+}
+
 /* --- Feriados lista --- */
 #feriadosLista {
   color: var(--text-secondary);
