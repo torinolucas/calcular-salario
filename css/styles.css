@@ -299,7 +299,7 @@ select {
 .ref {
   width: 70px;
   text-align: center;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--text-muted);
   font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
   flex-shrink: 0;

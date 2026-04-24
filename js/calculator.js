@@ -388,8 +388,7 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
     // ===== ANIMAÇÃO DE CONTAGEM NO VALOR LÍQUIDO =====
     animarValor('resLiquido', salarioLiquido);
 
-    // ===== SALVAR NO LOCALSTORAGE =====
-    salvarDadosLocal();
+
 }
 
 /**
@@ -415,37 +414,7 @@ function animarValor(elementId, valorFinal) {
     requestAnimationFrame(step);
 }
 
-/**
- * Salva os valores dos inputs no localStorage
- */
-function salvarDadosLocal() {
-    var campos = ['salarioBase','bonificacao','he75','he100','heNoturna75','heNoturna100','sobreaviso'];
-    var dados = {};
-    campos.forEach(function(id) {
-        var el = document.getElementById(id);
-        if (el) dados[id] = el.value;
-    });
-    try { localStorage.setItem('calcSalario_dados', JSON.stringify(dados)); } catch(e) {}
-}
 
-/**
- * Restaura os valores dos inputs do localStorage
- */
-function restaurarDadosLocal() {
-    try {
-        var dados = JSON.parse(localStorage.getItem('calcSalario_dados'));
-        if (!dados) return false;
-        var preencheu = false;
-        for (var id in dados) {
-            var el = document.getElementById(id);
-            if (el && dados[id] && dados[id] !== '0' && dados[id] !== '') {
-                el.value = dados[id];
-                preencheu = true;
-            }
-        }
-        return preencheu;
-    } catch(e) { return false; }
-}
 
 /**
  * Reseta todos os campos e esconde resultados
@@ -464,7 +433,6 @@ function resetarCampos() {
     if (mesRefEl) mesRefEl.value = new Date().getMonth() + 1;
     if (anoRefEl) anoRefEl.value = new Date().getFullYear();
     document.getElementById('resultados').style.display = 'none';
-    try { localStorage.removeItem('calcSalario_dados'); } catch(e) {}
     // Recalcular dias úteis pro mês atual
     atualizarDiasPorMesAno();
     // Atualizar URL
@@ -598,12 +566,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Delegar inicialização da URL compartilhável
     if (window.urlShare && typeof window.urlShare.init === 'function') {
         try { window.urlShare.init(); } catch (e) { console.warn('Erro ao iniciar urlShare:', e); }
-    }
-
-    // ===== RESTAURAR DADOS DO LOCALSTORAGE (se não veio da URL) =====
-    var urlParams2 = new URLSearchParams(window.location.search);
-    if (!urlParams2.has('salarioBase')) {
-        restaurarDadosLocal();
     }
 
     // ===== CÁLCULO AUTOMÁTICO AO DIGITAR =====
