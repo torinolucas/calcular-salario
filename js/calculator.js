@@ -144,35 +144,38 @@ function calcularDescontos(salarioBruto) {
         formulaINSSTexto = `${partesFormula.join(' + ')} = R$ ${descontoINSS.toFixed(2)}`;
     }
 
-    // ===== CÁLCULO DO IRRF (Reforma Tributária 2026) =====
+    // ===== CÁLCULO DO IRRF (Reforma Tributária 2026 — Lei 15.270/2025) =====
     // Base de cálculo: Salário Bruto arredondado - INSS arredondado
     const baseIRRF = Math.round((salarioBruto - descontoINSS) * 100) / 100;
 
     let descontoIRRF = 0;
     let formulaIRRFTexto = '';
 
-    // 1) Isenção total: até R$ 5.000,00
-    if (baseIRRF <= 5000.00) {
-        descontoIRRF = 0;
-        formulaIRRFTexto = `Base IRRF: ${baseIRRF.toFixed(2)} — Isento (até R$ 5.000,00)`;
+    // A verificação de faixa é feita sobre os RENDIMENTOS TRIBUTÁVEIS (bruto),
+    // mas o cálculo do imposto é sobre a BASE (bruto - INSS)
 
-    // 2) Faixa de redução gradual: R$ 5.000,01 a R$ 7.350,00
-    } else if (baseIRRF <= 7350.00) {
-        // Calcular imposto pela tabela progressiva tradicional
+    // 1) Isenção total: Rendimentos Tributáveis até R$ 5.000,00
+    if (salarioBruto <= 5000.00) {
+        descontoIRRF = 0;
+        formulaIRRFTexto = `Rendimento: ${salarioBruto.toFixed(2)} — Isento (até R$ 5.000,00)`;
+
+    // 2) Faixa de redução gradual: Rendimentos Tributáveis de R$ 5.000,01 a R$ 7.350,00
+    } else if (salarioBruto <= 7350.00) {
+        // Calcular imposto pela tabela progressiva sobre a BASE (bruto - INSS)
         const impostoTabela = calcularImpostoTabela(baseIRRF);
-        // Redutor: 978,62 - (0,133145 × Base_IRRF)
-        const redutor = Math.round((978.62 - (0.133145 * baseIRRF)) * 100) / 100;
+        // Redutor: 978,62 - (0,133145 × Rendimentos Tributáveis/Bruto)
+        const redutor = Math.round((978.62 - (0.133145 * salarioBruto)) * 100) / 100;
         descontoIRRF = impostoTabela - (redutor > 0 ? redutor : 0);
         if (descontoIRRF < 0) descontoIRRF = 0;
         descontoIRRF = Math.round(descontoIRRF * 100) / 100;
-        formulaIRRFTexto = `Base IRRF: ${baseIRRF.toFixed(2)} — Tabela: ${impostoTabela.toFixed(2)} - Redutor: ${(redutor > 0 ? redutor : 0).toFixed(2)} = ${descontoIRRF.toFixed(2)}`;
+        formulaIRRFTexto = `Base: ${baseIRRF.toFixed(2)} — Tabela: ${impostoTabela.toFixed(2)} - Redutor: ${(redutor > 0 ? redutor : 0).toFixed(2)} = ${descontoIRRF.toFixed(2)}`;
 
     // 3) Acima de R$ 7.350,00: tabela tradicional sem redutor
     } else {
         descontoIRRF = calcularImpostoTabela(baseIRRF);
         descontoIRRF = Math.round(descontoIRRF * 100) / 100;
         const faixaInfo = obterFaixaIRRF(baseIRRF);
-        formulaIRRFTexto = `Base IRRF: ${baseIRRF.toFixed(2)} × ${faixaInfo.aliquotaTexto} - ${faixaInfo.deducaoTexto} = ${descontoIRRF.toFixed(2)}`;
+        formulaIRRFTexto = `Base: ${baseIRRF.toFixed(2)} × ${faixaInfo.aliquotaTexto} - ${faixaInfo.deducaoTexto} = ${descontoIRRF.toFixed(2)}`;
     }
 
     // Garantir que o IRRF não seja negativo
@@ -324,40 +327,38 @@ function exibirResultados(dados, calculos, descontos, salarioLiquido) {
         linhas += 'R$ ' + calculos.salarioBruto.toFixed(2) + ' − R$ ' + descontos.inss.toFixed(2) + ' = <strong>R$ ' + baseIRRF.toFixed(2) + '</strong><br>';
         linhas += '<small>(esse valor é a "base de cálculo")</small><br><br>';
 
-        if (baseIRRF <= 5000.00) {
-            linhas += '<strong>Passo 2:</strong> Verificar a faixa:<br>';
-            linhas += '✅ Até R$ 5.000 → <strong>Isento!</strong><br>';
+        linhas += '<strong>Passo 2:</strong> Verificar a faixa pelo bruto (R$ ' + calculos.salarioBruto.toFixed(2) + '):<br>';
+
+        if (calculos.salarioBruto <= 5000.00) {
+            linhas += '✅ Bruto até R$ 5.000 → <strong>Isento!</strong><br>';
             linhas += 'Você não paga nada de IR.';
 
-        } else if (baseIRRF <= 7350.00) {
-            linhas += '<strong>Passo 2:</strong> Verificar a faixa:<br>';
-            linhas += 'Sua base (R$ ' + baseIRRF.toFixed(2) + ') está entre R$ 5.000 e R$ 7.350.<br><br>';
+        } else if (calculos.salarioBruto <= 7350.00) {
+            linhas += 'Bruto entre R$ 5.000 e R$ 7.350 → tem redução.<br><br>';
 
-            linhas += '<strong>Passo 3:</strong> Calcular o imposto normal:<br>';
+            linhas += '<strong>Passo 3:</strong> Calcular o imposto pela tabela (sobre a base):<br>';
             const impostoTab = calcularImpostoTabela(baseIRRF);
             const faixaInfo = obterFaixaIRRF(baseIRRF);
             linhas += 'R$ ' + baseIRRF.toFixed(2) + ' × ' + faixaInfo.aliquotaTexto + ' − R$ ' + faixaInfo.deducaoTexto + ' = R$ ' + impostoTab.toFixed(2) + '<br><br>';
 
-            linhas += '<strong>Passo 4:</strong> Aplicar o benefício da reforma:<br>';
-            linhas += 'Quem ganha nessa faixa tem direito a pagar menos IR. ';
-            linhas += 'Quanto mais perto de R$ 5.000, maior o abatimento. ';
-            linhas += 'Quanto mais perto de R$ 7.350, menor o abatimento.<br><br>';
-            const redutor = Math.round(Math.max(978.62 - (0.133145 * baseIRRF), 0) * 100) / 100;
-            linhas += 'No seu caso, o abatimento é de R$ ' + redutor.toFixed(2) + '<br>';
+            linhas += '<strong>Passo 4:</strong> Calcular a redução (sobre o bruto):<br>';
+            linhas += 'Quanto mais perto de R$ 5.000, maior a redução. ';
+            linhas += 'Quanto mais perto de R$ 7.350, menor.<br>';
+            const redutor = Math.round(Math.max(978.62 - (0.133145 * calculos.salarioBruto), 0) * 100) / 100;
+            linhas += '978,62 − (0,133145 × ' + calculos.salarioBruto.toFixed(2) + ') = R$ ' + redutor.toFixed(2) + '<br><br>';
+            linhas += '<strong>Passo 5:</strong> Imposto final:<br>';
             linhas += 'R$ ' + impostoTab.toFixed(2) + ' − R$ ' + redutor.toFixed(2) + ' = <strong>R$ ' + descontos.irrf.toFixed(2) + '</strong>';
 
         } else {
-            linhas += '<strong>Passo 2:</strong> Verificar a faixa:<br>';
-            linhas += 'Sua base (R$ ' + baseIRRF.toFixed(2) + ') é maior que R$ 7.350.<br>';
-            linhas += 'Nesse caso, o cálculo segue a tabela padrão sem benefício extra.<br><br>';
+            linhas += 'Bruto acima de R$ 7.350 → tabela normal, sem redução.<br><br>';
 
-            linhas += '<strong>Passo 3:</strong> Aplicar a porcentagem da sua faixa:<br>';
+            linhas += '<strong>Passo 3:</strong> Aplicar a porcentagem da faixa (sobre a base):<br>';
             const faixa = obterFaixaIRRF(baseIRRF);
             const valorBrutoIR = Math.round(baseIRRF * faixa.aliquota * 100) / 100;
             linhas += 'R$ ' + baseIRRF.toFixed(2) + ' × ' + faixa.aliquotaTexto + ' = R$ ' + valorBrutoIR.toFixed(2) + '<br><br>';
 
             linhas += '<strong>Passo 4:</strong> Subtrair o ajuste da faixa:<br>';
-            linhas += 'Cada faixa tem um valor de ajuste pra que você não pague a porcentagem cheia sobre tudo. ';
+            linhas += 'Cada faixa tem um ajuste pra não pagar a porcentagem cheia sobre tudo. ';
             linhas += 'Na sua faixa (' + faixa.aliquotaTexto + '), o ajuste é R$ ' + faixa.deducaoTexto + '.<br><br>';
             linhas += 'R$ ' + valorBrutoIR.toFixed(2) + ' − R$ ' + faixa.deducaoTexto + ' = <strong>R$ ' + descontos.irrf.toFixed(2) + '</strong>';
         }
